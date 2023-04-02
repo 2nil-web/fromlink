@@ -26,6 +26,7 @@ GDB=gdb
 RC=windres
 
 #CPPFLAGS += -U VERBOSE_MODE
+CPPFLAGS += -D UNICODE -D _UNICODE
 CXXFLAGS += -Wall -Wextra -std=c++20 -pedantic
 LDFLAGS  += -static
 LDFLAGS  += -g -Os
