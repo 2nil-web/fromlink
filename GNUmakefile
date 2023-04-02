@@ -101,7 +101,7 @@ rclean :
 # Génération du version.h intégré dans l'appli
 version.h : version_check.txt
 	@echo -e "Building C++ header $@"
-	@echo -e "std::string name=\"${PREFIX}\", version=\"${VERSION}\", decoration=\"${DECORATION}\", commit=\"${COMMIT}\", created_at=\"${ISO8601}\";" >$@
+	@echo -e "std::wstring name=L\"${PREFIX}\", version=L\"${VERSION}\", decoration=L\"${DECORATION}\", commit=L\"${COMMIT}\", created_at=L\"${ISO8601}\";" >$@
 
 # Génération du version.json intégré dans le paquetage
 version.json : version_check.txt

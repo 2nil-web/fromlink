@@ -1,49 +1,35 @@
 
-#include <iostream>
-#include <functional>
+// Programme qui permet de passer le nom d'un raccourcis windows (stem, sans l'extension .lnk) en paramètre d'une commande
+// Prévoir un mode debug et le choix de placement du stem, actuellement il est placé à la suite de tous les paramètres ...
+
 #include <vector>
 #include <string>
-#include <locale>
-#include <codecvt>
 #include <filesystem>
+
 #include <windows.h>
-#include <windowsx.h>
 #include "shobjidl.h"
 #include "shlguid.h"
-#include "strsafe.h"
 
-#include "version.h"
 #include "resource.h"
 
-std::wstring s2ws(const std::string s) {
-  return std::wstring(s.begin(), s.end());
-}
-
-std::string ws2s(const std::wstring& w) {
-  std::string s;
-  std::transform(w.begin(), w.end(), std::back_inserter(s), [] (wchar_t c) {
-      return (char)c;
-  });
-
-  return s;
-}
+#ifdef MESSAGE
+#include "version.h"
 
 std::wstring toShowCmd(int sc) {
   switch (sc) {
-    case SW_SHOWNORMAL    : return L"NORMAL";
-    case SW_SHOWMAXIMIZED : return L"MAXIMIZED";
-    case SW_SHOWMINIMIZED : return L"MINIMIZED";
+    case SW_SHOWNORMAL      : return L"NORMAL";
+    case SW_SHOWMINIMIZED   : return L"MINIMIZED";
+    case SW_SHOWMAXIMIZED   : return L"MAXIMIZED";
+    case SW_SHOWNOACTIVATE  : return L"NOACTIVATE";
+    case SW_SHOW            : return L"SHOW";
+    case SW_SHOWMINNOACTIVE : return L"MINNOACTIVE";
+    case SW_SHOWNA          : return L"NA";
+    case SW_SHOWDEFAULT     : return L"DEFAULT";
   }
 
-  return L"Unknown";
+  return L"UNKNOWN";
 }
-
-std::vector<std::wstring> cmdLineToWsVec(std::wstring cmdl) {
-  LPWSTR *wav;
-  int ac;
-  wav=CommandLineToArgvW(cmdl.c_str(), &ac);
-  return std::vector<std::wstring>(wav, wav+ac);
-}
+#endif
 
 std::vector<std::wstring> cmdLineToWsVec() {
   LPWSTR *wav;
@@ -52,27 +38,15 @@ std::vector<std::wstring> cmdLineToWsVec() {
   return std::vector<std::wstring>(wav, wav+ac);
 }
 
-std::vector<std::string> cmdLineToSVec() {
-  std::vector<std::wstring> wsv=cmdLineToWsVec();
-  std::vector<std::string> sv;
-  for (auto ws : wsv) sv.push_back(ws2s(ws));
-  return sv;
-}
-
-#define ADDL(lib) res+=s2ws(lib)+szBuffer+L"\n"
-
-/* ResolveIt - Uses the Shell's IShellLink and IPersistFile interfaces to retrieve the informations from an existing shortcut.
-  Returns the result of calling the member functions of the interfaces to a wstring.
-  wsz - Address of a buffer that contains the path of the link, including the file name. */
-std::wstring lnkInfo(LPWSTR wsz) {
+// Retrieve informations from the existing shortcut wohse path is provided by the parameter link
+void lnkInfo(std::wstring link, std::wstring& argl, std::wstring& wdir, std::wstring& desc, int& show_mode) {
   HRESULT hres;
   IShellLink* psl;
   WCHAR szBuffer[MAX_PATH];
-  WIN32_FIND_DATA wfd;
-  std::wstring res=L"";
 
   // Get a pointer to the IShellLink interface. It is assumed that CoInitialize has already been called.
   hres=CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
+
   if (SUCCEEDED(hres)) {
     IPersistFile* ppf;
 
@@ -81,7 +55,7 @@ std::wstring lnkInfo(LPWSTR wsz) {
 
     if (SUCCEEDED(hres)) {
       // Load the shortcut.
-      hres=ppf->Load(wsz, STGM_READ);
+      hres=ppf->Load(link.c_str(), STGM_READ);
 
       if (SUCCEEDED(hres)) {
         // Resolve the link.
@@ -89,14 +63,11 @@ std::wstring lnkInfo(LPWSTR wsz) {
 
         if (SUCCEEDED(hres)) {
           // Get the path to the link target.
-          if (SUCCEEDED(psl->GetArguments(szBuffer, MAX_PATH))) ADDL("args: ");
-          if (SUCCEEDED(psl->GetPath(szBuffer, MAX_PATH, (WIN32_FIND_DATA*)&wfd, SLGP_SHORTPATH))) ADDL("path: "); // Plus tard essayer SLGP_RAWPATH
-          if (SUCCEEDED(psl->GetWorkingDirectory (szBuffer, MAX_PATH))) ADDL("workdir: ");
+          if (SUCCEEDED(psl->GetArguments(szBuffer, MAX_PATH))) argl=szBuffer;
+          if (SUCCEEDED(psl->GetWorkingDirectory(szBuffer, MAX_PATH))) wdir=szBuffer;
+          if (SUCCEEDED(psl->GetDescription(szBuffer, MAX_PATH))) desc=szBuffer;
           int d;
-//          if (SUCCEEDED(psl->GetIconLocation(szBuffer, MAX_PATH, &d))) res+=std::wstring(L"Icon: ")+szBuffer+L", index: "+std::to_wstring(d)+L"\n";
-          if (SUCCEEDED(psl->GetDescription(szBuffer, MAX_PATH))) ADDL("desc: ");
-          if (SUCCEEDED(psl->GetShowCmd(&d))) res+=std::wstring(L"show mode: ")+toShowCmd(d)+L"\n";
-
+          if (SUCCEEDED(psl->GetShowCmd(&d))) show_mode=d;
         }
       }
 
@@ -107,62 +78,100 @@ std::wstring lnkInfo(LPWSTR wsz) {
     // Release the pointer to the IShellLink interface.
     psl->Release();
   }
-
-  return res;
 }
 
-std::wstring decompose_path(std::filesystem::path p) {
-  std::string s="";
-  /* s+="root_name: "+p.root_name().string()+'\n';
-  s+="root_directory: "+p.root_directory().string()+'\n';
-  s+="root_path: "+p.root_path().string()+'\n';
-  s+="relative_path: "+p.relative_path().string()+'\n';
-  s+="filename: "+p.filename().string()+'\n';*/
-
-  s+="parent_path: "+p.parent_path().string()+'\n';
-  s+="stem: "+p.stem().string()+'\n';
-  s+="extension: "+p.extension().string()+'\n';
-
-  return s2ws(s);
+void decompose_path(std::filesystem::path p, std::wstring& parent_path, std::wstring& stem, std::wstring& ext) {
+  parent_path=p.parent_path().wstring();
+  stem=p.stem().wstring();
+  ext=p.extension().wstring();
 }
 
-std::wstring decompose_path(std::wstring str) {
-  return decompose_path(std::filesystem::path(ws2s(str)));
+void decompose_path(std::wstring path, std::wstring& parent_path, std::wstring& stem, std::wstring& ext) {
+  decompose_path(std::filesystem::path(path), parent_path, stem, ext);
+}
+
+UINT WINAPI MyWinExec(std::wstring CmdLine, UINT nCmdShow) {
+  PROCESS_INFORMATION info;
+  STARTUPINFO startup;
+  UINT ret;
+
+  memset(&startup, 0, sizeof(startup));
+  startup.cb=sizeof(startup);
+  startup.dwFlags=STARTF_USESHOWWINDOW;
+  startup.wShowWindow=nCmdShow;
+
+  if (CreateProcess( NULL, &CmdLine[0], NULL, NULL, FALSE, 0, NULL, NULL, &startup, &info )) {
+    ret=33;
+    /* Close off the handles */
+    CloseHandle(info.hThread);
+    CloseHandle(info.hProcess);
+  } else if ((ret=GetLastError()) >= 32) {
+    ret=11;
+  }
+
+  return ret;
 }
 
 int WINAPI WinMain(HINSTANCE , HINSTANCE, LPSTR , int) {
   STARTUPINFO si;
   GetStartupInfo(&si);
-  std::wstring s=L"";
 
-  std::wstring FullName=s2ws(name+" "+version);
-  if (version.find('-') != std::string::npos && commit != "") FullName+=s2ws("+"+commit);
-  if (decoration != "") FullName+=s2ws("  "+decoration);
+  std::wstring path=si.lpTitle, ppath, stem, ext, argl, workdir, desc;
+  int show_mode=0;
+  std::filesystem::path p=std::filesystem::path(path);
+  decompose_path(p, ppath, stem, ext);
+  bool is_shortcut=(si.dwFlags == STARTF_TITLEISLINKNAME || ext == L".lnk");
 
-  std::filesystem::path p=std::filesystem::path(si.lpTitle);
-
-  if (p.extension().string() == ".lnk") {
-    s+=s2ws("LINK\n")+decompose_path(p);
-    HRESULT hres=CoInitialize(NULL);
-
-    if (SUCCEEDED(hres)) {
-      std::wstring li=lnkInfo(si.lpTitle);
-      if (li != L"") s+=li+L"\n";
+  if (is_shortcut) {
+    if (SUCCEEDED(CoInitialize(NULL))) {
+      lnkInfo(path, argl, workdir, desc, show_mode);
     }
+
+    argl+=L' '+stem;
   } else {
     std::vector<std::wstring> args=cmdLineToWsVec();
-    s+=L"COMMAND\n"+decompose_path(args[0]);
+    path=args[0];
+    decompose_path(path, ppath, stem, ext);
 
     if (args.size() > 1) {
-      s+=L"args: ";
-      for (size_t i=1; i < args.size(); i++) s+=args[i]+L" ";
-      s+=L"\n";
+      for (size_t i=1; i < args.size(); i++) argl+=args[i]+L" ";
     }
-    s+=s2ws("path: ")+args[0]+L"\n";
-    s+=s2ws("workdir: "+std::filesystem::current_path().string()+"\n");
+
+    workdir=std::filesystem::current_path().wstring();
   }
 
-  MessageBox(NULL, s.c_str() , FullName.c_str(), MB_OK);
+#ifdef MESSAGE
+  // Décors de l'appli
+  std::wstring AppTitle=name+L' '+version;
+  if (version.find(L'-') != std::wstring::npos && !commit.empty()) AppTitle+=L'+'+commit;
+  if (!decoration.empty()) AppTitle+=L"  "+decoration;
+
+  std::wstring msg;
+  if (is_shortcut) {
+    msg=L"LINK\n";
+  } else {
+    msg=L"COMMAND\n";
+  }
+
+  msg+=L"path: "+path+L"\n";
+  msg+=L"parent_path: "+ppath+L"\n";
+
+  msg+=L"stem: "+stem;
+  if (is_shortcut) {
+    msg+=L" (Passed at the end of parameters)";
+  }
+  msg+=L'\n';
+
+  msg+=L"extension: "+ext+L"\n";
+  msg+=L"args: "+argl+L"\n";
+  msg+=L"workdir: "+workdir+L"\n";
+  if (!desc.empty()) msg+=L"desc: "+desc+L"\n";
+  if (show_mode) msg+=L"show mode: "+toShowCmd(show_mode)+L"\n";
+
+  MessageBox(NULL, msg.c_str() , AppTitle.c_str(), MB_OK);
+#endif
+
+  MyWinExec(argl, show_mode);
   return 0;
 }
 
