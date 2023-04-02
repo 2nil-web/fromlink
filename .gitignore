@@ -1,0 +1,14 @@
+*.o
+*.d
+*.exe
+.qmake.stash
+*~
+*.swp
+*.ico
+*.mk
+*.mk.*
+debug
+release
+version_check.txt
+version.h
+version.json
