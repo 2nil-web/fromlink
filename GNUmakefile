@@ -1,6 +1,6 @@
 
 ifeq (${HOSTNAME},PC-Denis)
-MSBUILD='C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
+#MSBUILD='C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
 endif
 
 #ARCH=$(call lc,${MSYSTEM})
@@ -49,7 +49,7 @@ all : version_check.txt version.h ${TARGETS}
 ifeq ($(MSBUILD),)
 ${TARGETS} : ${OBJS}
 else
-${TARGETS} : ${PREFIX}.ico ${SRCS}
+${TARGETS} : ${PREFIX}.ico version.h ${SRCS}
 	${MSBUILD} ${PREFIX}.sln -p:Configuration=Release
 	cp x64/Release/${TARGETS} .
 endif
@@ -95,6 +95,7 @@ clean :
 
 rclean :
 	rm -f $(OBJS) *.d *~ $(TARGETS) ${PREFIX}.ico
+	rm -rf x64
 
 # Génération du version.h intégré dans l'appli
 version.h : version_check.txt

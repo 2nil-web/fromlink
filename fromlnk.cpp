@@ -3,6 +3,8 @@
 #include <functional>
 #include <vector>
 #include <string>
+#include <locale>
+#include <codecvt>
 #include <filesystem>
 #include <windows.h>
 #include <windowsx.h>
@@ -119,7 +121,15 @@ std::vector<std::wstring> cmdLineToWsVec() {
 std::vector<std::string> cmdLineToSVec() {
     std::vector<std::wstring> wsv=cmdLineToWsVec();
     std::vector<std::string> sv;
-    for (auto ws : wsv) sv.push_back(std::string(ws.begin(), ws.end()));
+
+    for (auto ws : wsv) {
+        std::string str;
+        std::transform(ws.begin(), ws.end(), std::back_inserter(str), [](wchar_t c) {
+            return (char)c;
+            });
+        sv.push_back(str);
+
+    }
 
     return sv;
 }
@@ -130,7 +140,8 @@ int WINAPI WinMain(HINSTANCE , HINSTANCE, LPSTR , int) {
   std::string s="";
 
   std::string FullName = name+" "+version;
-  if (commit != "") FullName+='+'+commit;
+  if (version.find('-') != std::string::npos && commit != "") FullName+='+'+commit;
+  if (decoration != "") FullName+="  "+decoration;
 
   std::filesystem::path p=std::filesystem::path(si.lpTitle);
   if (p.extension().string() == ".lnk") s+="LINK\n"+decompose_path(p)+'\n';
