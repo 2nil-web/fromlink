@@ -1,4 +1,9 @@
 
+ifeq (${HOSTNAME},PC-Denis)
+CMAKE='/c/Program Files/CMake/bin/cmake.exe'
+MSBUILD='C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
+endif
+
 OS=$(shell uname -s)
 
 #CPPFLAGS += -U VERBOSE_MODE
@@ -52,7 +57,13 @@ TARGETS=${PREFIX}${EXEXT}
 
 all : ${TARGETS}
 
+ifeq ($(MSBUILD),)
 ${TARGETS} : ${OBJS}
+else
+${TARGET} : ${SRCS}
+	${MSBUILD} ${PREFIX}.sln -p:Configuration=Release
+	cp x64/Release/${TARGET} .
+endif
 
 ${PREFIX}Res.o : ${PREFIX}.ico
 
