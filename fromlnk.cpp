@@ -10,9 +10,9 @@
 #include "shlguid.h"
 #include "strsafe.h"
                             
+#include "version.h"
 #include "resource.h"
 
-const char szClassName[] = "fromlnk";
 #ifdef NE_COMPILE_PAS
 /* ResolveIt - Uses the Shell's IShellLink and IPersistFile interfaces to retrieve the path and description from an existing shortcut. 
 
@@ -107,23 +107,43 @@ std::string decompose_path(std::string str) {
   return decompose_path(std::filesystem::path(str));
 }
 
-//int WINAPI WinMain(HINSTANCE , HINSTANCE, LPSTR , int) {
-int main(int argc, char **argv) {
+
+std::vector<std::wstring> cmdLineToWsVec() {
+  LPWSTR *wav;
+  int ac;
+  wav=CommandLineToArgvW(GetCommandLineW(), &ac);
+
+  return std::vector<std::wstring>(wav, wav+ac);
+}
+
+std::vector<std::string> cmdLineToSVec() {
+    std::vector<std::wstring> wsv=cmdLineToWsVec();
+    std::vector<std::string> sv;
+    for (auto ws : wsv) sv.push_back(std::string(ws.begin(), ws.end()));
+
+    return sv;
+}
+
+int WINAPI WinMain(HINSTANCE , HINSTANCE, LPSTR , int) {
   STARTUPINFO si;
   GetStartupInfo(&si);
   std::string s="";
 
+  std::string FullName = name+" "+version;
+  if (commit != "") FullName+='+'+commit;
+
   std::filesystem::path p=std::filesystem::path(si.lpTitle);
-  if (p.extension().string() == ".lnk") s+="LINK\n"+decompose_path(p);
+  if (p.extension().string() == ".lnk") s+="LINK\n"+decompose_path(p)+'\n';
 
-  s+="\nCOMMAND\n"+decompose_path(std::string(argv[0]));
+  std::vector<std::string> args=cmdLineToSVec();
+  s+="COMMAND\n"+decompose_path(std::string(args[0]));
 
-  s+="\nARGUMENTS";
-  std::vector<std::string> args=std::vector<std::string>(argv + 1, argv + argc);
-  int i=1;
-  for (auto arg:args) s+="\narg "+std::to_string(i++)+": "+arg;
+  if (args.size() > 1) {
+    s+="\nARGUMENTS";
+    for (size_t i=1; i < args.size(); i++) s+="\narg "+std::to_string(i)+": "+args[i];
+  }
 
-  MessageBox(NULL, s.c_str() , szClassName, MB_OK);
+  MessageBoxA(NULL, s.c_str() , FullName.c_str(), MB_OK);
   return 0;
 }
 

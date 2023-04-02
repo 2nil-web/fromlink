@@ -12,3 +12,5 @@ release
 version_check.txt
 version.h
 version.json
+*.vcxproj.filters
+*.vcxproj.user
