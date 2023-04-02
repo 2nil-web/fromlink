@@ -1,6 +1,6 @@
 
 ifeq (${HOSTNAME},PC-Denis)
-#MSBUILD='C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
+MSBUILD='C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
 endif
 
 #ARCH=$(call lc,${MSYSTEM})
@@ -56,16 +56,16 @@ endif
 
 ${PREFIX}Res.o : ${PREFIX}.ico
 
-do_strip : $(TARGETS)
-	$(STRIP) $(TARGETS)
+strip : $(TARGETS)
+	$(STRIP) $(TARGETS) || true
 
-do_upx : do_strip
-	$(UPX) $(TARGETS)
+upx : strip
+	$(UPX) $(TARGETS) || true
 
-do_gdb :  $(TARGETS)
+gdb :  $(TARGETS)
 	$(GDB) $(TARGETS)
 
-test : do_upx
+test : upx
 	ls -l ${TARGETS} && ./${TARGETS} &
 	
 cfg :
