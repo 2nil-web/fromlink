@@ -22,16 +22,20 @@ void MyWinExec(LPWSTR Cmd, UINT nCmdShow) {
 int WINAPI WinMain(HINSTANCE , HINSTANCE, LPSTR , int nCmdShow) {
   STARTUPINFO si;
   GetStartupInfo(&si);
-  wchar_t buf[PATH_MAX], cmd[PATH_MAX];
+  wchar_t buf[PATH_MAX], cmd[PATH_MAX]=L"";
   GetFileTitle(si.lpTitle, buf, PATH_MAX);
   LPWSTR *av;
   int ac;
   av=CommandLineToArgvW(GetCommandLine(), &ac);
-  StringCchCopyW(cmd, PATH_MAX, av[1]);
+  for (int i=1; i < ac; i++) {
+    StringCchCatW(cmd, PATH_MAX, av[i]);
+    StringCchCatW(cmd, PATH_MAX, L" ");
+  }
+
   StringCchCatW(cmd, PATH_MAX, L" ");
   StringCchCatW(cmd, PATH_MAX, buf);
 
-//  if (MessageBox(NULL, cmd, L"-", MB_OKCANCEL) == IDOK)
+  if (MessageBox(NULL, cmd, L"-", MB_OKCANCEL) == IDOK)
     MyWinExec(cmd, nCmdShow);
 }
 
