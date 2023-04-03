@@ -25,15 +25,10 @@ UPX=upx
 GDB=gdb
 RC=windres
 
-#CPPFLAGS += -U VERBOSE_MODE
 CPPFLAGS += -D UNICODE -D _UNICODE
-CXXFLAGS += -Wall -Wextra -std=c++20 -pedantic
-LDFLAGS  += -static
-LDFLAGS  += -g -Os
-LDFLAGS  += -mwindows
-LDLIBS   += -lwsock32 -lws2_32 -luxtheme
-LDLIBS   += -lurlmon
-LDLIBS   += -lole32 -luuid -lcomctl32 -loleaut32 -lgdi32
+CXXFLAGS += -Wall -Wextra -std=c++20 -pedantic -Os
+LDFLAGS  += -static -Os -mwindows
+LDLIBS   += -lole32 -luuid
 
 PREFIX=fromlnk
 SRCS=${PREFIX}.cpp
@@ -61,7 +56,7 @@ strip : $(TARGETS)
 	$(STRIP) $(TARGETS) || true
 
 upx : strip
-	$(UPX) $(TARGETS) || true
+	$(UPX) --best $(TARGETS) || true
 
 gdb :  $(TARGETS)
 	$(GDB) $(TARGETS)

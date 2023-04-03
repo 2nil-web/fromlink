@@ -12,6 +12,7 @@
 
 #include "resource.h"
 
+//#define MESSAGE
 #ifdef MESSAGE
 #include "version.h"
 
@@ -100,7 +101,7 @@ UINT WINAPI MyWinExec(std::wstring CmdLine, UINT nCmdShow) {
   startup.dwFlags=STARTF_USESHOWWINDOW;
   startup.wShowWindow=nCmdShow;
 
-  if (CreateProcess( NULL, &CmdLine[0], NULL, NULL, FALSE, 0, NULL, NULL, &startup, &info )) {
+  if (CreateProcess(NULL, &CmdLine[0], NULL, NULL, FALSE, 0, NULL, NULL, &startup, &info)) {
     ret=33;
     /* Close off the handles */
     CloseHandle(info.hThread);
@@ -163,10 +164,11 @@ int WINAPI WinMain(HINSTANCE , HINSTANCE, LPSTR , int) {
   msg+=L'\n';
 
   msg+=L"extension: "+ext+L"\n";
-  msg+=L"args: "+argl+L"\n";
+  msg+=L"args: ["+argl+L"]\n";
   msg+=L"workdir: "+workdir+L"\n";
   if (!desc.empty()) msg+=L"desc: "+desc+L"\n";
   if (show_mode) msg+=L"show mode: "+toShowCmd(show_mode)+L"\n";
+
 
   MessageBox(NULL, msg.c_str() , AppTitle.c_str(), MB_OK);
 #endif
