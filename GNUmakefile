@@ -126,7 +126,7 @@ ifneq ($(MAKECMDGOALS),rclean)
 	${MAGICK} convert -background none $< $@
 
 %.ico : %.svg
-	${MAGICK} convert -background none $< $@
+	${MAGICK} convert -background none +dither -colors 16 -depth 4 $< $@
 
 %.o: %.c
 #  commands to execute (built-in):
