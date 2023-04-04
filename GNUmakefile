@@ -26,13 +26,14 @@ GDB=gdb
 RC=windres
 
 CPPFLAGS += -D UNICODE -D _UNICODE
+CFLAGS += -Wall -Wextra -std=c2x -pedantic -Os
 CXXFLAGS += -Wall -Wextra -std=c++20 -pedantic -Os
 LDFLAGS  += -static -Os -mwindows
 LDLIBS   += -lole32 -luuid
 
 PREFIX=fromlnk
-SRCS=${PREFIX}.cpp
-OBJS=$(SRCS:.cpp=.o)
+SRCS=${PREFIX}.c
+OBJS=$(SRCS:.c=.o)
 OBJS += ${PREFIX}Res.o
 EXEXT=.exe
 TARGETS=${PREFIX}${EXEXT}
@@ -113,7 +114,7 @@ ifneq ($(MAKECMDGOALS),rclean)
 # Implicit rules
 
 %.exe: %.o
-	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+	$(LINK.c) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 %.exe: %.c
 	$(LINK.c) $^ $(LOADLIBES) $(LDLIBS) -o $@
@@ -127,6 +128,14 @@ ifneq ($(MAKECMDGOALS),rclean)
 %.ico : %.svg
 	${MAGICK} convert -background none $< $@
 
+%.o: %.c
+#  commands to execute (built-in):
+	$(COMPILE.c) $(OUTPUT_OPTION) $<
+
+%.o: %.cpp
+#  commands to execute (built-in):
+	$(COMPILE.cc) $(OUTPUT_OPTION) $<
+
 # Régles pour construire les fichier objet d'après les .rc
 %.o : %.rc
 	$(RC) $(CPPFLAGS) $< --include-dir . $(OUTPUT_OPTION)
@@ -135,7 +144,6 @@ ifneq ($(MAKECMDGOALS),rclean)
 	@echo Checking header dependencies from $<
 	@$(COMPILE.c) -isystem /usr/include -MM $< >> $@
 
-#	@echo "Building "$@" from "$<
 %.d: %.cpp
 	@echo Checking header dependencies from $<
 	@$(COMPILE.cpp) -isystem /usr/include -MM $< >> $@
