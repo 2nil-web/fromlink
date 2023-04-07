@@ -1,4 +1,6 @@
 
+// Rebaptiser GetStartupPath
+
 #include <windows.h>
 #include <strsafe.h>
 
