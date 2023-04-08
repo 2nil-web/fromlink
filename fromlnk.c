@@ -9,12 +9,9 @@
 
 #include "resource.h"
 
-#define MESSAGE
-#ifdef MESSAGE
 #include "version.h"
-#endif
 
-wchar_t **str_split(const wchar_t *in, wchar_t delm, size_t *num_elm, size_t max)
+wchar_t **StringSplit(const wchar_t *in, wchar_t delm, size_t *num_elm, size_t max)
 {
     wchar_t *parsestr, **out;
     size_t  cnt=1, i, in_len;
@@ -56,23 +53,18 @@ wchar_t *GetPathValue() {
 
 int PathExists(const wchar_t *dir, const wchar_t *cmd, wchar_t **ext) {
   wchar_t path[MAX_PATH]=L"";
-  StringCchCopyW(path, MAX_PATH, dir);
-  StringCchCatW(path, MAX_PATH, L"\\");
-  StringCchCatW(path, MAX_PATH, cmd);
-
+  StringCchPrintfW(path, MAX_PATH, L"%s\\%s", dir, cmd);
   if (PathFileExistsW(path) == TRUE) return 1;
-//  if (ext == NULL) return 0;
 
   // If not found try to find with any extension
-  StringCchCatW(path, MAX_PATH, L".*");
-  WIN32_FIND_DATA pdat;
-  if (FindFirstFileW(path, &pdat) != INVALID_HANDLE_VALUE) {
-    *ext=PathFindExtensionW(pdat.cFileName);
-    MessageBox(NULL, path, *ext, MB_OK);
+  if (PathFindExtensionW(path)[0] != '.') {
+    StringCchCatW(path, MAX_PATH, L".*");
+    WIN32_FIND_DATA pdat;
 
-    if (CompareStringW(LOCALE_USER_DEFAULT, 0, *ext, 4, L".lnk", 4) == CSTR_EQUAL) return 0;
-    else {
-      return 1;
+    if (FindFirstFileW(path, &pdat) != INVALID_HANDLE_VALUE) {
+      *ext=PathFindExtensionW(pdat.cFileName);
+
+      if (StrCmpCW(*ext, L".lnk") != 0) return 1;
     }
   }
 
@@ -81,17 +73,14 @@ int PathExists(const wchar_t *dir, const wchar_t *cmd, wchar_t **ext) {
 
 int CheckPath(const wchar_t *dir, const wchar_t *cmd, wchar_t **ext) {
   if (PathExists(dir, cmd, ext)) return 1;
-
   int ret=0;
-
   size_t n;
   wchar_t *pv, **tpv;
   pv=GetPathValue();
-  tpv=str_split(pv, ';', &n, 10000);
+  tpv=StringSplit(pv, ';', &n, 10000);
 
-  for(int i=0; i < n; i++) {
-    if (PathExists(tpv[i], cmd, ext)) {
-      MessageBox(NULL, tpv[i], cmd, MB_OK);
+  for(size_t i=0; i < n; i++) {
+    if (PathExists(tpv[i], cmd, ext) != 0) {
       ret=1;
       break;
     }
@@ -99,27 +88,54 @@ int CheckPath(const wchar_t *dir, const wchar_t *cmd, wchar_t **ext) {
 
   free(tpv);
   free(pv);
-
   return ret;
 }
 
+size_t StringLength(const wchar_t s[MAX_PATH]) {
+  size_t l;
+  StringCchLengthW(s, MAX_PATH, &l);
+  return l;
+}
+
+const wchar_t *GetAppName() {
+  static wchar_t an[MAX_PATH];
+  static size_t l=0;
+
+  if (l == 0) {
+    if ((l=StringLength(an)) == 0) StringCchPrintfW(an, MAX_PATH, L"%s %s", name, version);
+    if (StrChrW(version, L'-') != NULL && StringLength(commit) != 0) StringCchPrintfW(an, MAX_PATH, L"%s+%s", an, commit);
+  }
+
+  return an;
+}
+
+int MessageBoxApp(UINT uType, const wchar_t *fmt, ...) {
+  wchar_t msg[MAX_PATH]=L"";
+  va_list ap;
+
+  va_start(ap, fmt);
+  StringCchVPrintfW(msg, MAX_PATH, fmt, ap);
+  va_end(ap);
+  return MessageBox(NULL, msg, GetAppName(), uType);
+}
 
 // Affiche l'erreur windows
 void WinError(const wchar_t *fmt, ...) {
   wchar_t *lpMsgBuf;
-  wchar_t title[MAX_PATH];
+  wchar_t msg[MAX_PATH]=L"";
   va_list ap;
 
   va_start(ap, fmt);
-  _vsnwprintf_s(title, MAX_PATH, MAX_PATH, fmt, ap);
+  StringCchVPrintfW(msg, MAX_PATH, fmt, ap);
   va_end(ap);
 
   FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
-
-  MessageBox(NULL, lpMsgBuf, title, MB_OK|MB_ICONERROR);
+  StringCchCatW(msg, MAX_PATH, lpMsgBuf);
   LocalFree(lpMsgBuf);
+  MessageBoxApp(MB_OK|MB_ICONERROR, msg);
 }
+
 
 int WINAPI WinMain(
 #ifdef _MSC_VER
@@ -135,37 +151,41 @@ HINSTANCE , HINSTANCE , LPSTR , int
   GetFileTitle(si.lpTitle, ftitle, MAX_PATH);
   int ac;
   LPWSTR *av=CommandLineToArgvW(GetCommandLine(), &ac);
+  int do_pathcheck=FALSE;
+  int do_message=FALSE;
 
+  int narg=0;
   for (int i=1; i < ac; i++) {
-    StringCchCatW(cmd, MAX_PATH, av[i]);
-    if(i < ac-1) StringCchCatW(cmd, MAX_PATH, L" ");
+    if (StrCmpIW(av[i], L"-pathcheck") == 0) {
+      do_pathcheck=TRUE;
+    } else if (StrCmpIW(av[i], L"-message") == 0) {
+      do_message=TRUE;
+    } else {
+      narg++;
+      StringCchCatW(cmd, MAX_PATH, av[i]);
+      if(i < ac-1) StringCchCatW(cmd, MAX_PATH, L" ");
+    }
   }
 
-  size_t l;
-  StringCchLengthW(cmd, MAX_PATH, &l);
+  size_t l=StringLength(cmd);
   if (l > 0) StringCchCatW(cmd, MAX_PATH, L" ");
   StringCchCatW(cmd, MAX_PATH, ftitle);
-
   GetCurrentDirectory(MAX_PATH, cdir);
 
-  wchar_t *ext=NULL;
-  if (CheckPath(cdir, cmd, &ext) == 0) {
-    wchar_t msg[MAX_PATH]=L"Could not open ";
-    StringCchCatW(msg, MAX_PATH, cmd);
+  if (narg < 2 || do_pathcheck) {
+    wchar_t *ext=NULL;
 
-    MessageBox(NULL, msg, L"-", MB_OK|MB_ICONERROR);
-    return 0;
+    if (CheckPath(cdir, cmd, &ext) == 0) {
+      MessageBoxApp(MB_OK|MB_ICONERROR, L"Could not open %s", cmd);
+      return 0;
+    }
+
+    if (ext != NULL) StringCchCatW(cmd, MAX_PATH, ext);
   }
 
-  if (ext != NULL) StringCchCatW(cmd, MAX_PATH, ext);
-
-#ifdef MESSAGE
-  if (MessageBox(NULL, cdir, cmd, MB_OKCANCEL) == IDOK)
-#endif
-  {
-    if (ShellExecuteW(NULL, NULL, cmd, NULL, cdir, si.wShowWindow) <= (HINSTANCE)32) {
-      WinError(L"%s\\%s", cdir, cmd);
-    }
+  if (!do_message || MessageBoxApp(MB_OKCANCEL, L"%s %s", cdir, cmd) == IDOK) {
+    if (ShellExecuteW(NULL, NULL, cmd, NULL, cdir, si.wShowWindow) <= (HINSTANCE)32)
+      WinError(L"ShellExecute error with %s\\%s\n", cdir, cmd);
   }
   return 0;
 }
