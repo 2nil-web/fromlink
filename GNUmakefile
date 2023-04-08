@@ -29,7 +29,7 @@ CPPFLAGS += -D UNICODE -D _UNICODE
 CFLAGS += -Wall -Wextra -std=c2x -pedantic -Os
 CXXFLAGS += -Wall -Wextra -std=c++20 -pedantic -Os
 LDFLAGS  += -static -Os -mwindows
-LDLIBS   += -lole32 -luuid
+LDLIBS   += -lshlwapi -lole32 -luuid
 
 PREFIX=fromlnk
 SRCS=${PREFIX}.c
@@ -97,7 +97,8 @@ rclean :
 # Génération du version.h intégré dans l'appli
 version.h : version_check.txt
 	@echo -e "Building C++ header $@"
-	@echo -e "std::wstring name=L\"${PREFIX}\", version=L\"${VERSION}\", decoration=L\"${DECORATION}\", commit=L\"${COMMIT}\", created_at=L\"${ISO8601}\";" >$@
+	@echo -e "LPCSTR name=L\"${PREFIX}\", version=L\"${VERSION}\", decoration=L\"${DECORATION}\", commit=L\"${COMMIT}\", created_at=L\"${ISO8601}\";" >$@
+#	@echo -e "std::wstring name=L\"${PREFIX}\", version=L\"${VERSION}\", decoration=L\"${DECORATION}\", commit=L\"${COMMIT}\", created_at=L\"${ISO8601}\";" >$@
 
 # Génération du version.json intégré dans le paquetage
 version.json : version_check.txt
