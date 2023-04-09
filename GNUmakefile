@@ -1,6 +1,10 @@
 
+ifneq ($(MAKECMDGOALS),gcc)
+ifneq ($(MAKECMDGOALS),g++)
 ifeq (${HOSTNAME},PC-Denis)
 MSBUILD='C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
+endif
+endif
 endif
 
 #ARCH=$(call lc,${MSYSTEM})
@@ -41,7 +45,13 @@ ISO8601 := $(shell date +%Y-%m-%dT%H:%M:%SZ)
 .PHONY: FORCE
 
 all : version_check.txt version.h ${TARGETS}
-#	make ${TARGETS}
+
+# Par défaut en GCC on compile avec g++, cette option permet de revenir à gcc
+gcc : all
+
+g++ : all
+
+
 
 ifeq ($(MSBUILD),)
 ${TARGETS} : ${OBJS}
@@ -96,9 +106,9 @@ rclean :
 
 # Génération du version.h intégré dans l'appli
 version.h : version_check.txt
-	@echo -e "Building C++ header $@"
-	@echo -e "LPCWSTR name=L\"${PREFIX}\", version=L\"${VERSION}\", decoration=L\"${DECORATION}\", commit=L\"${COMMIT}\", created_at=L\"${ISO8601}\";" >$@
-#	@echo -e "std::wstring name=L\"${PREFIX}\", version=L\"${VERSION}\", decoration=L\"${DECORATION}\", commit=L\"${COMMIT}\", created_at=L\"${ISO8601}\";" >$@
+	@echo -e "Building C/C++ header $@"
+	@echo -e "LPCTSTR name=TEXT(\"${PREFIX}\"), version=TEXT(\"${VERSION}\"), decoration=TEXT(\"${DECORATION}\"), commit=TEXT(\"${COMMIT}\"), created_at=TEXT(\"${ISO8601}\");" >$@
+#	@echo -e "std::wstring name=TEXT(\"${PREFIX}\"), version=TEXT(\"${VERSION}\"), decoration=TEXT(\"${DECORATION}\"), commit=TEXT(\"${COMMIT}\"), created_at=TEXT(\"${ISO8601}\");" >$@
 
 # Génération du version.json intégré dans le paquetage
 version.json : version_check.txt
@@ -113,6 +123,11 @@ version_check.txt : FORCE
 # Les régles qui suivent ne sont pas utiles quand on fait 'make clean'
 ifneq ($(MAKECMDGOALS),rclean)
 # Implicit rules
+
+ifneq ($(MAKECMDGOALS),gcc)
+COMPILE.c=${COMPILE.cpp}
+LINK.c=${LINK.cpp}
+endif
 
 %.exe: %.o
 	$(LINK.c) $^ $(LOADLIBES) $(LDLIBS) -o $@
@@ -154,5 +169,4 @@ ifdef OBJS
 -include $(OBJS:.o=.d)
 endif
 endif
-
 
