@@ -139,7 +139,7 @@ TCHAR **StringSplit(const TCHAR *in, TCHAR delm, size_t *num_elm, size_t max) {
 
     if (in == NULL || num_elm == NULL) return NULL;
 
-    StringCchLength(in, STRSAFE_MAX_CCH, &in_len);
+    in_len=StringLength(in);
     if (in_len == 0) return NULL;
 
     parsestr=(TCHAR *)malloc(in_len+1);
@@ -236,7 +236,7 @@ int options(TCHAR *s, SOpts *opts) {
 }
 
 void help () {
-  MessageBoxApp(MB_OK, TEXT("Windows shortcut name as first parameters.\nDo not use this program directly\nOnly use it as the first one called by a shortcut.\nIt will then execute the second parameter of the shortcut and insert the shortcut name as its first parameter.\nThis allows the called programs to act according the name and settings of the shortcut."));
+  MessageBoxApp(MB_OK, TEXT("Windows shortcut name as first parameters.\nDo not use this program directly\nOnly use it as the first one called by a shortcut.\nIt will then execute the first parameter of the shortcut if there is one and add the shortcut name as last parameter.\nThis allows the called programs to act according the name and settings of the shortcut."));
 }
 
 
@@ -249,29 +249,43 @@ int WINAPI WinMain(HINSTANCE , HINSTANCE , LPSTR , int)
 {
   STARTUPINFO si;
   GetStartupInfo(&si);
-  TCHAR ftitle[MAX_STR], cmd[MAX_STR]=TEXT(""), cdir[MAX_STR];
+  TCHAR ftitle[MAX_STR], cmd[MAX_STR]=TEXT(""),  param[MAX_STR]=TEXT(""), cdir[MAX_STR];
   GetFileTitle(si.lpTitle, ftitle, MAX_STR);
-  int ac;
+  int ac, i;
   LPTSTR *av=CommandLineToArgv(GetCommandLine(), &ac);
   SOpts opts={ FALSE, FALSE, FALSE };
 
+  // First pass for fromlnk parameters (-checkpath, -message ...)
   int narg=0;
-  for (int i=1; i < ac; i++) {
-    if (!options(av[i], &opts)) {
-      narg++;
-      StringCchCat(cmd, MAX_STR, av[i]);
-      if(i < ac-1) StringCchCat(cmd, MAX_STR, TEXT(" "));
-    }
-  }
+  for (i=1; i < ac; i++)
+    if (!options(av[i], &opts)) narg++;
 
   if (opts.help) {
     help();
     return 0;
   }
 
-  size_t l=StringLength(cmd);
-  if (l > 0) StringCchCat(cmd, MAX_STR, TEXT(" "));
-  StringCchCat(cmd, MAX_STR, ftitle);
+  // Second pass for the arguments to the eventual command if there is one.
+  if (narg == 0) { // If there is no argument put the shortcut name in cmd and nothing under param
+      StringCchCopy(cmd, MAX_STR, ftitle);
+  } else { // Else put the first parameter in cmd, the other in param plus the shortcut name at the end
+    narg=0;
+
+    for (i=1; i < ac; i++) {
+      if (!options(av[i], &opts)) {
+        if (narg == 0) StringCchCopy(cmd, MAX_STR, av[i]);
+        else {
+          StringCchCat(param, MAX_STR, av[i]);
+          StringCchCat(param, MAX_STR, TEXT(" "));
+        }
+
+        narg++;
+      }
+    }
+
+    StringCchCat(param, MAX_STR, ftitle);
+  }
+
   GetCurrentDirectory(MAX_STR, cdir);
 
   TCHAR av0[MAX_STR];
@@ -290,8 +304,8 @@ int WINAPI WinMain(HINSTANCE , HINSTANCE , LPSTR , int)
     if (ext != NULL) StringCchCat(cmd, MAX_STR, ext);
   }
 
-  if (!opts.message || MessageBoxApp(MB_OKCANCEL, TEXT("%s %s"), cdir, cmd) == IDOK) {
-    if (ShellExecute(NULL, NULL, cmd, NULL, cdir, si.wShowWindow) <= (HINSTANCE)32)
+  if (!opts.message || MessageBoxApp(MB_OKCANCEL, TEXT("ShellExecute of command [%s]\nWith parameters %s\nUnder folder [%s]"), cmd, param, cdir) == IDOK) {
+    if (ShellExecute(NULL, L"open", cmd, param, cdir, si.wShowWindow) <= (HINSTANCE)32)
       WinError(TEXT("ShellExecute error with %s\\%s\n"), cdir, cmd);
   }
 
