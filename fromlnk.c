@@ -16,14 +16,18 @@ size_t StringLength(const TCHAR *s) {
   return l;
 }
 
+int StringEmpty(const TCHAR *s) {
+  return (StringLength(s) == 0);
+}
+
 const TCHAR *GetAppName() {
   static TCHAR an[MAX_STR];
   static size_t l=0;
 
   if (l == 0) {
     if ((l=StringLength(an)) == 0) StringCchPrintf(an, MAX_STR, TEXT("%s %s"), name, version);
-    if (StrChr(version, L'-') != NULL && StringLength(commit) != 0) StringCchPrintf(an, MAX_STR, TEXT("%s+%s"), an, commit);
-    if (StringLength(decoration) > 0) StringCchPrintf(an, MAX_STR, TEXT("%s - %s"), an, decoration);
+    if (StrChr(version, L'-') != NULL && StringEmpty(commit)) StringCchPrintf(an, MAX_STR, TEXT("%s+%s"), an, commit);
+    if (!StringEmpty(decoration)) StringCchPrintf(an, MAX_STR, TEXT("%s - %s"), an, decoration);
   }
 
   return an;
@@ -222,7 +226,9 @@ typedef struct SOpts {
 } SOpts;
 
 int options(TCHAR *s, SOpts *opts) {
-#define ASSERT_RET(OPT) if (StrCmpC(s, TEXT("-" #OPT )) == 0 || StrCmpC(s, TEXT("/" #OPT ))) { opts->OPT=TRUE; return TRUE; }
+//#define ASSERT_RET(OPT) if (StrCmpI(s, TEXT("-" #OPT )) == 0 || StrCmpI(s, TEXT("/" #OPT ))) { opts->OPT=TRUE; return TRUE; }
+//#define ASSERT_RET(OPT) if (StrCmpI(s, TEXT("-" #OPT )) == 0) { opts->OPT=TRUE; return TRUE; }
+#define ASSERT_RET(OPT) if ((s[0] == '-' || s[0] == '/') && StrCmpI(&s[1], TEXT( #OPT )) == 0) { opts->OPT=TRUE; return TRUE; }
   ASSERT_RET(help);
   ASSERT_RET(pathcheck);
   ASSERT_RET(message);
@@ -254,7 +260,7 @@ int WINAPI WinMain(HINSTANCE , HINSTANCE , LPSTR , int)
   for (i=1; i < ac; i++)
     if (!options(av[i], &opts)) narg++;
 
-  if (opts.help) {
+  if (opts.help == TRUE) {
     help();
     return 0;
   }
@@ -297,7 +303,14 @@ int WINAPI WinMain(HINSTANCE , HINSTANCE , LPSTR , int)
     if (ext != NULL) StringCchCat(cmd, MAX_STR, ext);
   }
 
-  if (!opts.message || MessageBoxApp(MB_OKCANCEL, TEXT("ShellExecute of command [%s]\nWith parameters %s\nUnder folder [%s]"), cmd, param, cdir) == IDOK) {
+
+  TCHAR msg[MAX_STR]=TEXT("");
+  if (opts.message) {
+    StringCchPrintf(msg, MAX_STR, TEXT("In folder [%s]\nShellExecute of command [%s]"), cdir, cmd);
+    if (!StringEmpty(param)) StringCchPrintf(msg, MAX_STR, TEXT("%s\nWith parameters %s"), msg, param);
+  }
+
+  if (!opts.message || MessageBoxApp(MB_OKCANCEL, msg) == IDOK) {
     if (ShellExecute(NULL, L"open", cmd, param, cdir, si.wShowWindow) <= (HINSTANCE)32)
       WinError(TEXT("ShellExecute error with %s\\%s\n"), cdir, cmd);
   }
