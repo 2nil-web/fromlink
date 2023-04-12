@@ -21,7 +21,7 @@ endif
 
 VERSION=$(shell git describe --abbrev=0 --tags 2>/dev/null || echo 'Unknown_version')
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo 'Unknown_commit')
-DECORATION=Nawak-Bidon
+DECORATION=Windows shortcut supercharged.
 
 MAGICK=magick
 STRIP=strip

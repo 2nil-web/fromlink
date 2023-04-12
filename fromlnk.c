@@ -23,6 +23,7 @@ const TCHAR *GetAppName() {
   if (l == 0) {
     if ((l=StringLength(an)) == 0) StringCchPrintf(an, MAX_STR, TEXT("%s %s"), name, version);
     if (StrChr(version, L'-') != NULL && StringLength(commit) != 0) StringCchPrintf(an, MAX_STR, TEXT("%s+%s"), an, commit);
+    if (StringLength(decoration) > 0) StringCchPrintf(an, MAX_STR, TEXT("%s - %s"), an, decoration);
   }
 
   return an;
@@ -174,7 +175,7 @@ TCHAR *GetPathValue() {
   return path;
 }
 
-int PathExistss(const TCHAR *dir, const TCHAR *cmd, TCHAR **ext) {
+int PathExists(const TCHAR *dir, const TCHAR *cmd, TCHAR **ext) {
   TCHAR path[MAX_STR]=TEXT("");
   StringCchPrintf(path, MAX_STR, TEXT("%s\\%s"), dir, cmd);
   if (PathFileExists(path) == TRUE) return 1;
@@ -192,13 +193,6 @@ int PathExistss(const TCHAR *dir, const TCHAR *cmd, TCHAR **ext) {
   }
 
   return 0;
-}
-
-
-int PathExists(const TCHAR *dir, const TCHAR *cmd, TCHAR **ext) {
-  int ret=PathExistss(dir, cmd, ext);
-  //MessageBoxApp(MB_OK, TEXT("dir %s\ncmd %s\next %s\nret %d"), dir, cmd, ext, ret);
-  return ret;
 }
 
 int CheckPath(const TCHAR *dir, const TCHAR *cmd, TCHAR **ext) {
@@ -228,7 +222,7 @@ typedef struct SOpts {
 } SOpts;
 
 int options(TCHAR *s, SOpts *opts) {
-#define ASSERT_RET(OPT) if (StrCmpI(s, TEXT("-" #OPT )) == 0) { opts->OPT=TRUE; return TRUE; }
+#define ASSERT_RET(OPT) if (StrCmpC(s, TEXT("-" #OPT )) == 0 || StrCmpC(s, TEXT("/" #OPT ))) { opts->OPT=TRUE; return TRUE; }
   ASSERT_RET(help);
   ASSERT_RET(pathcheck);
   ASSERT_RET(message);
@@ -236,7 +230,7 @@ int options(TCHAR *s, SOpts *opts) {
 }
 
 void help () {
-  MessageBoxApp(MB_OK, TEXT("Windows shortcut name as first parameters.\nDo not use this program directly\nOnly use it as the first one called by a shortcut.\nIt will then execute the first parameter of the shortcut if there is one and add the shortcut name as last parameter.\nThis allows the called programs to act according the name and settings of the shortcut."));
+  MessageBoxApp(MB_OK, TEXT("Do not use this program directly\nOnly put it at the start of the target field of a shortcut.\nIt will then execute what follows while adding the shortcut name as the last parameter.\nThis allows a targeted programs to act according to the name and settings of a shortcut."));
 }
 
 
@@ -292,7 +286,6 @@ int WINAPI WinMain(HINSTANCE , HINSTANCE , LPSTR , int)
   StringCchPrintf(av0, MAX_STR, TEXT("%s\\%s"), cdir, cmd);
   if (StrCmpI(av0, av[0]) == 0) { help(); return 0; }
 
-  //MessageBoxApp(MB_OK, TEXT("ac %d, narg %d\n\ncdir %s\\%s\nav0 %s"), ac, narg, cdir, cmd, av[0]);
   if (narg < 1 || opts.pathcheck) {
     TCHAR *ext=NULL;
 
