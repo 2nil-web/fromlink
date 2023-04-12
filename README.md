@@ -1,29 +1,23 @@
 # fromlnk
 
-## Getting started
+## How to build
 
-## Test and Deploy
-
-## Name
-
-Choose a self-explaining name for your project.
-
-## Description
+Under msys2 shell, type "make help".
+Can be built with GNU gcc or Visual Studio under Windows.
+If you want to built it with Visual Studio, have a look at the variable MSBUILD in the Makefile.
 
 ## Usage
 
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-
-## Roadmap
-
-## Contributing
+Do not use this program directly.
+Only put it at the start of the target field of a shortcut.
+It will then execute what follows while adding the shortcut name as the last parameter.
+This allows a targeted programs to act according to the name and settings of a shortcut.
 
 ## Authors and acknowledgment
 
+(C) Denis LALANNE
+
 ## License
 
-For open source projects, say how it is licensed.
-
-## Project status
+Do what you want with that.
+No responsability of any kind..

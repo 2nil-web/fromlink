@@ -1,12 +1,4 @@
 
-ifneq ($(MAKECMDGOALS),gcc)
-ifneq ($(MAKECMDGOALS),g++)
-ifeq (${HOSTNAME},PC-Denis)
-MSBUILD='C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
-endif
-endif
-endif
-
 #ARCH=$(call lc,${MSYSTEM})
 ARCH=mingw64
 
@@ -52,14 +44,21 @@ gcc : all
 g++ : all
 
 
+MSBUILD=''
+ifneq ($(MAKECMDGOALS),gcc)
+ifneq ($(MAKECMDGOALS),g++)
+MSBUILD='C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
+endif
+endif
 
-ifeq ($(MSBUILD),)
+ifneq ($(shell test -f ${MSBUILD} && echo -n yes || true),yes)
 ${TARGETS} : ${OBJS}
 else
 ${TARGETS} : ${PREFIX}.ico version.h ${SRCS}
 	${MSBUILD} ${PREFIX}.sln -p:Configuration=Release
 	cp x64/Release/${TARGETS} .
 endif
+
 
 ${PREFIX}Res.o : ${PREFIX}.ico
 
@@ -87,15 +86,21 @@ cfg :
 	@echo -e "VERSION=${VERSION}\nCOMMIT=${COMMIT}\nDECORATION=${DECORATION}\n"
 
 help :
-	@echo -e "$(shell tput smul)Que faire pour livrer une nouvelle version ?$(shell tput rmul)"
-	@echo -e "1-Vérifier les tags distants : git ls-remote --tags origin"
-	@echo -e "2-Vérifier les tags locaux   : git describe --abbrev=0 --tags"
-	@echo -e "3-Nouveau tag de version     : git tag -a X.Y.Z-nom_de_la_prereleasee -m 'commentaire' # De préférence un tag annoté (-a)."
-	@echo -e "4-Pousser un tag             : git push --tags"
-	@echo -e "5-Build applicatif           : make"
-	@echo -e "6-Build du setup             : make setup # (ToDo)"
-	@echo -e "7-Livraison                  : make deliv # (ToDo)"
-	@echo -e "Pour le versionnage, respecter la sémantique de version (cf. semver.org, i.e.: MAJOR.MINOR.PATCH-pre_release+metadata ...)"
+	@echo -e "$(shell tput smul)What to do to build and/or deliver a new version?$(shell tput rmul)"
+	@echo "To build it, under MSys2, type 'make'"
+	@echo -e "It can be compiled with GNU gcc or GNU g++ or Visual Studio."
+	@echo =e "If Visual Studio is correctly set in the makefile then it will be the default compiler else gcc."
+	@echo -e "To force the use of gcc type 'make gcc'."
+	@echo -e "To force the use of g++ type 'make g++'."
+	@echo "For delivery"
+	@echo -e "1-Check remote tags   : git ls-remote --tags origin"
+	@echo -e "2-Check local tags    : git describe --abbrev=0 --tags"
+	@echo -e "3-New version tag     : git tag -a X.Y.Z-nom_de_la_prereleasee -m 'commentaire' # De préférence un tag annoté (-a)."
+	@echo -e "4-Push a tag          : git push --tags"
+	@echo -e "5-Build application   : make ..., make strip, make upx"
+	@echo -e "6-Build the setup     : make setup # (ToDo)"
+	@echo -e "7-Delivery            : make deliv # (ToDo)"
+	@echo -e "For versioning, respect Semantic Versioning (see semver.org, i.e.: MAJOR.MINOR.PATCH-pre_release+metadata ...)"
 
 clean :
 	rm -f $(OBJS) *~ $(TARGETS)
