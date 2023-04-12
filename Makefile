@@ -45,10 +45,9 @@ g++ : all
 
 
 MSBUILD=''
-ifneq ($(MAKECMDGOALS),gcc)
-ifneq ($(MAKECMDGOALS),g++)
+
+ifeq ($([[ ${MAKECMDGOALS} =~ g[+|c][+|c] ]] && echo -n notgxx || true),notgxx)
 MSBUILD='C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
-endif
 endif
 
 ifneq ($(shell test -f ${MSBUILD} && echo -n yes || true),yes)
