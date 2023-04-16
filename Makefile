@@ -43,14 +43,19 @@ gcc : all
 
 g++ : all
 
-
-MSBUILD=''
-
-ifeq ($([[ ${MAKECMDGOALS} =~ g[+|c][+|c] ]] && echo -n notgxx || true),notgxx)
 MSBUILD='C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe'
+
+ifeq ($(shell [ -f ${MSBUILD} ] && echo -n yes || true),yes)
+ifeq (${MAKECMDGOALS},gcc)
+MSBUILD=
+else ifeq (${MAKECMDGOALS},g++)
+MSBUILD=
+endif
+else
+MSBUILD=
 endif
 
-ifneq ($(shell test -f ${MSBUILD} && echo -n yes || true),yes)
+ifeq (${MSBUILD},)
 ${TARGETS} : ${OBJS}
 else
 ${TARGETS} : ${PREFIX}.ico version.h ${SRCS}
@@ -80,6 +85,7 @@ cfg :
 	@type ${RC} # iscc
 	@type ${STRIP} ${UPX} convert inkscape
 	@type ${CC} ${CXX} gcc g++ ${GDB}
+	@type ${MSBUILD}
 	@echo -e "\nCPPFLAGS=${CPPFLAGS}\nCXXFLAGS=${CXXFLAGS}\nLDFLAGS=${LDFLAGS}\nLDLIBS=${LDLIBS}\n"
 	@echo -e "SRCS=${SRCS}\nOBJS=${OBJS}\nTARGETS=${TARGETS}\n"
 	@echo -e "VERSION=${VERSION}\nCOMMIT=${COMMIT}\nDECORATION=${DECORATION}\n"
