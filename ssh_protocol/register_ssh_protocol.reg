@@ -1,0 +1,8 @@
+REGEDIT4
+[HKEY_CURRENT_USER\Software\Classes\ssh]
+@="URL:Putty SSH Protocol"
+"URL Protocol"=""
+[HKEY_CURRENT_USER\Software\Classes\ssh\shell]
+[HKEY_CURRENT_USER\Software\Classes\ssh\shell\open]
+[HKEY_CURRENT_USER\Software\Classes\ssh\shell\open\command]
+@="\"C:\\Users\\lalannd2\\MyApps\\Putty\\putty.exe\" \"%1\" -pw \"%2\"
