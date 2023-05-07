@@ -18,27 +18,31 @@ function wsn() { return callActiveX('ScriptControl'); }
 function arg(n) { return WScript.arguments(n); }
 function arg.count() { return WScript.arguments.count(); }
 
+//SSH_CMD='ssh'
+SSH_CMD='C:\\Software\\OpenSSH\\ssh.exe'
+
 if (arg.count() == 3) {
-  user1=arg(0);
-  host1=arg(1);
+  host1=arg(0);
+  user1=arg(1);
   pass1=arg(2);
   cmd="ssh "+user1+"@"+host1;
   wsh().Run(cmd, 9);
   WScript.Sleep(900);    // Give time to load
   wsh().SendKeys(pass1+"{ENTER}"); // Send password
 } else if (arg.count() == 6) {
-  user1=arg(0);
-  host1=arg(1);
+  host1=arg(0);
+  user1=arg(1);
   pass1=arg(2);
 
-  user2=arg(3);
-  host2=arg(4);
+  host2=arg(3);
+  user2=arg(4);
   pass2=arg(5);
 
-  cmd="ssh -J "+user1+"@"+host1+" "+user2+"@"+host2;
-  wsh().Run(cmd, 9);
+  cmd=SSH_CMD+" -o StrictHostKeyChecking=no -J "+user1+"@"+host1+" "+user2+"@"+host2;
+  WScript.Echo(cmd);
+  //wsh().Run(cmd, 9);
 
-  WScript.Sleep(400);
+  WScript.Sleep(800);
   wsh().SendKeys(pass1+"{ENTER}");
   WScript.Sleep(800);
   wsh().SendKeys(pass2+"{ENTER}");
