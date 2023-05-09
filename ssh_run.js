@@ -102,7 +102,8 @@ PTERM_CMD='C:\\Users\\lalannd2\\MyApps\\Putty\\pterm.exe';
 // mintty is the cygwin/mingw/msys terminal emulator, its big advantage is to embed graphics in terminal output (sixel, tektronix ..)
 // try : GNUTERM=sixel /mingw64/bin/gnuplot -e "splot [x=-3:3] [y=-3:3] sin(x) * cos(y)"
 // See https://mintty.github.io/mintty.1.html
-MINTTY_CMD='C:\\Software\\mintty\\bin\\mintty.exe';
+MINTTY_CMD='C:\\Software\\mintty\\bin\\mintty.exe bash -c ';
+//MINTTY_CMD='C:\\Software\\UnixTools\\msys64\\usr\\bin\\mintty.exe';
 
 function ssh_call() {
   // Paramètres par paquets de trois
@@ -115,7 +116,7 @@ function ssh_call() {
     bname=WScript.ScriptName.replace(/\.js/, "");
 
     // Display command just for debug
-    if (true) {
+    if (false) {
       msg=bname+'\n'+cmd+'\n';
       //for (i=0; i < pass.length; i++) msg+='['+pass[i]+']';
       WScript.echo('ssh '+sshMajorVersion+': '+msg);
