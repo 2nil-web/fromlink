@@ -23,7 +23,7 @@ if (!String.prototype.trim) {
 }
 
 // Arguments du script
-var args=WScript.Arguments;
+var argv=WScript.Arguments;
 
 // Return output of external command
 function SCmd(cmd) {
@@ -58,40 +58,41 @@ SSH_CMD='ssh.exe'
 //SSH_CMD='C:\\Software\\OpenSSH\\ssh.exe'
 
 cmd=SSH_CMD+' -o StrictHostKeyChecking=no ';
+var argv=[];
 var pass=[];
 
 // Option -J in ssh V7 does NOT work correctly.
 function ssh_prepV7 () {
-  if (args.count()===3) {
-    cmd+=args(1)+'@'+args(0);
-    pass[0]=args(2);
+  if (argv.length===3) {
+    cmd+=argv[1]+'@'+argv[0];
+    pass[0]=argv[2];
   } else {
-    for(i=0; i < args.count(); i+=3) {
-      if (i===args.count()-3) cmd+=' ';
+    for(i=0; i < argv.length; i+=3) {
+      if (i===argv.length-3) cmd+=' ';
       else cmd+='-o ProxyCommand="ssh.exe -W %h:%p ';
 
-      cmd+=args(i+1)+'@'+args(i);
-      if (i !== args.count()-3) cmd+='"';
-      pass[i/3]=args(i+2);
+      cmd+=argv[i+1]+'@'+argv[i];
+      if (i !== argv.length-3) cmd+='"';
+      pass[i/3]=argv[i+2];
     }
   }
 }
 
 // Option -J in ssh V8 does WORK correctly.
 function ssh_prepV8 () {
-  if (args.count()===3) {
-    cmd+=args(1)+'@'+args(0);
-    pass[0]=args(2);
+  if (argv.length===3) {
+    cmd+=argv[1]+'@'+argv[0];
+    pass[0]=argv[2];
   } else {
-    for(i=0; i < args.count(); i+=3) {
+    for(i=0; i < argv.length; i+=3) {
       if (i===0) cmd+='-J '
       else {
-        if (i===args.count()-3) cmd+=' ';
+        if (i===argv.length-3) cmd+=' ';
         else cmd+=',';
       }
 
-      cmd+=args(i+1)+'@'+args(i);
-      pass[i/3]=args(i+2);
+      cmd+=argv[i+1]+'@'+argv[i];
+      pass[i/3]=argv[i+2];
     }
   }
 }
@@ -105,44 +106,66 @@ PTERM_CMD='C:\\Users\\lalannd2\\MyApps\\Putty\\pterm.exe';
 MINTTY_CMD='C:\\Software\\mintty\\bin\\mintty.exe bash -c ';
 //MINTTY_CMD='C:\\Software\\UnixTools\\msys64\\usr\\bin\\mintty.exe';
 
+TERM_CMD='raw';
+
+function usage_die() {
+  WScript.echo("Missing parameters. They must be provided by groups of three:\n \
+==> host, user and password.\n \
+If there is only one group then we run a direct ssh.\n \
+Otherwise we run ssh with as many jumps as necessary to reach the last host, examples:\n \
+sshj host1 user1 pass1\n \
+    ==> will run a direct ssh.\n \
+sshj host1 user1 pass1 host2 user2 pass2\n \
+    ==> will run a ssh jump through host1 to reach host2.\n \
+sshj host1 user1 pass1 host2 user2 pass2 host3 user3 pass3\n \
+    ==> will run a ssh jump through host1, host2 to reach host3.\n \
+And so on ...\n \
+\n \
+Then the passwords input is simulated.");
+  WScript.quit();
+}
+
 function ssh_call() {
-  // Paramètres par paquets de trois
-  if (args.count() >= 3 && args.count()%3 == 0) {
+  if (WScript.Arguments.count() === 0) usage_die();
+
+  if (WScript.Arguments(0) === 'pterm' || WScript.Arguments(0) === 'mintty') {
+    TERM_CMD=WScript.Arguments(0);
+    arg_start=1;
+  } else arg_start=0;
+
+  for (i=arg_start; i < WScript.Arguments.count(); i++) argv[i-arg_start]=WScript.Arguments(i);
+
+  // Apartir d'ici les paramètres doivent être par paquets de trois
+  if (argv.length >= 3 && argv.length%3 == 0) {
     sshMajorVersion=SCmd(SSH_CMD+' -V').trim().replace(/OpenSSH.*_(.*), .*/, "$1").replace(/\..*/, "");
     if (sshMajorVersion > 7) ssh_prepV8();
     else ssh_prepV7();
 
-    // Act differently if basename is ssh_pterm or ssh_mintty
-    bname=WScript.ScriptName.replace(/\.js/, "");
-
     // Display command just for debug
     if (false) {
-      msg=bname+'\n'+cmd+'\n';
+      msg=cmd+'\n';
       //for (i=0; i < pass.length; i++) msg+='['+pass[i]+']';
       WScript.echo('ssh '+sshMajorVersion+': '+msg);
     }
 
     // Run ssh command under different terminal emulators pterm/putty or mintty or raw cmd console
     if (true) {
-      if (bname==='ssh_pterm') {
+      if (TERM_CMD==='pterm') {
         cmd=PTERM_CMD+' -e '+cmd;
-      } else if (bname==='ssh_mintty') {
+      } else if (TERM_CMD==='mintty') {
         cmd=MINTTY_CMD+' '+cmd;
       }
 
       wsh().Run(cmd);
       // mintty is slower to start because cygwin.dll load time)
-      if (bname==='ssh_mintty') WScript.Sleep(2000);
+      if (TERM_CMD==='mintty') WScript.Sleep(2000);
 
       for (i=0; i < pass.length; i++) {
         WScript.Sleep(1000);
         wsh().SendKeys(pass[i]+"{ENTER}");
       }
     }
-  } else {
-      WScript.echo("Missing parameters.They must be provided by groups of three:\n==> host, user and password.\nIf there is only one group then we run a direct ssh.\nOtherwise we run ssh with as many jumps as necessary to reach the last host, examples:\nsshj host1 user1 pass1\n    ==> will run a direct ssh.\nsshj host1 user1 pass1 host2 user2 pass2\n    ==> will run a ssh jump through host1 to reach host2.\nsshj host1 user1 pass1 host2 user2 pass2 host3 user3 pass3\n    ==> will run a ssh jump through host1, host2 to reach host3.\nAnd so on ...\n\nThen the passwords input is simulated.");
-      WScript.quit();
-  }
+  } else usage_die();
 }
 
 ssh_call();
