@@ -14,7 +14,7 @@ function ads() { return callActiveX('ADSystemInfo'); }
 function wsn() { return callActiveX('Wscript.Network'); }
 function loc() { return callActiveX("WbemScripting.SWbemLocator"); }
 
-lalannd2_passwd='b2N2ZEJ1bTEyJCoxCg==';
+lalannd2_passwd='b2N2ZEJ1bTIhCg==';
 
 args="";
 for (i=0; i < WScript.arguments.count(); i++) args+=WScript.arguments(i)+" ";

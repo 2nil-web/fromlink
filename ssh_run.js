@@ -22,8 +22,27 @@ if (!String.prototype.trim) {
   })();
 }
 
-// Arguments du script
-var argv=WScript.Arguments;
+var MB = {
+  Ok:0, OkCancel:1, AbortRetryIgnore:2, YesNoCancel:3, YesNo:4,
+  RetryCancel:5, CancelTryAgainContinue:6,
+  Stop:16, Question:32, Exclamation:48, Information:64,
+  Default2ndButton:256, Default3rdButton:512,
+  Modal:4096, RightAlignText:524288, RightToLeftText:1048576
+};
+
+var ID= {
+  Ok:1, Cancel:2, Abort:3, Retry:4, Ignore:5, Yes:6, No:7,
+  TryAgain:10, Continue:11, TimeOut:-1
+};
+
+function alert(s) {
+  wsh().Popup(s, 0, WScript.ScriptName, MB.Ok + MB.Information);
+}
+
+function confirm(s) {
+  rep=wsh().Popup(s, 0, WScript.ScriptName, MB.OkCancel + MB.Question);
+  return (rep == ID.Ok);
+}
 
 // Return output of external command
 function SCmd(cmd) {
@@ -54,14 +73,16 @@ function SCmd(cmd) {
 }
 
 // ssh command
+// V7
 SSH_CMD='ssh.exe'
+// V8
 //SSH_CMD='C:\\Software\\OpenSSH\\ssh.exe'
 
 cmd=SSH_CMD+' -o StrictHostKeyChecking=no ';
 var argv=[];
 var pass=[];
 
-// Option -J in ssh V7 does NOT work correctly.
+// Option -J in ssh V7 does NOT work correctly so we use -o ProxyCommand.
 function ssh_prepV7 () {
   if (argv.length===3) {
     cmd+=argv[1]+'@'+argv[0];
@@ -69,7 +90,7 @@ function ssh_prepV7 () {
   } else {
     for(i=0; i < argv.length; i+=3) {
       if (i===argv.length-3) cmd+=' ';
-      else cmd+='-o ProxyCommand="ssh.exe -W %h:%p ';
+      else cmd+=' -o ProxyCommand="'+SSH_CMD+' -W %h:%p ';
 
       cmd+=argv[i+1]+'@'+argv[i];
       if (i !== argv.length-3) cmd+='"';
@@ -103,8 +124,8 @@ PTERM_CMD='C:\\Users\\lalannd2\\MyApps\\Putty\\pterm.exe';
 // mintty is the cygwin/mingw/msys terminal emulator, its big advantage is to embed graphics in terminal output (sixel, tektronix ..)
 // try : GNUTERM=sixel /mingw64/bin/gnuplot -e "splot [x=-3:3] [y=-3:3] sin(x) * cos(y)"
 // See https://mintty.github.io/mintty.1.html
-MINTTY_CMD='C:\\Software\\mintty\\bin\\mintty.exe bash -c ';
-//MINTTY_CMD='C:\\Software\\UnixTools\\msys64\\usr\\bin\\mintty.exe';
+//MINTTY_CMD='C:\\Software\\wsltty\\bin\\mintty.exe bash -c ';
+MINTTY_CMD='C:\\Software\\UnixTools\\msys64\\usr\\bin\\mintty.exe';
 
 TERM_CMD='raw';
 
@@ -141,13 +162,6 @@ function ssh_call() {
     if (sshMajorVersion > 7) ssh_prepV8();
     else ssh_prepV7();
 
-    // Display command just for debug
-    if (false) {
-      msg=cmd+'\n';
-      //for (i=0; i < pass.length; i++) msg+='['+pass[i]+']';
-      WScript.echo('ssh '+sshMajorVersion+': '+msg);
-    }
-
     // Run ssh command under different terminal emulators pterm/putty or mintty or raw cmd console
     if (true) {
       if (TERM_CMD==='pterm') {
@@ -156,12 +170,19 @@ function ssh_call() {
         cmd=MINTTY_CMD+' '+cmd;
       }
 
+      // Display command just for debug
+      if (true) {
+        msg=cmd+'\n';
+        for (i=0; i < pass.length; i++) msg+='['+pass[i]+']';
+        if (!confirm('ssh '+sshMajorVersion+': '+msg)) WScript.quit();
+      }
+
       wsh().Run(cmd);
       // mintty is slower to start because cygwin.dll load time)
       if (TERM_CMD==='mintty') WScript.Sleep(2000);
 
       for (i=0; i < pass.length; i++) {
-        WScript.Sleep(1000);
+        WScript.Sleep(2000);
         wsh().SendKeys(pass[i]+"{ENTER}");
       }
     }
