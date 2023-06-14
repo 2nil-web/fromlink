@@ -1,13 +1,4 @@
 
-// Les arguments doivent être fournis par paquets de trois: host user password
-// Si il n'y a qu'un paquet de 3 trois on fait un ssh direct
-// Sinon on fait un ssh jump avec autant de jump que de paquets de trois
-// Le dernier paquet de trois indique la cible (le serveur que l'on veux finalement joindre).
-// Exemples :
-// sshj host1 user1 pass1 
-// sshj host1 user1 pass1 host2 user2 pass2 
-// sshj host1 user1 pass1 host2 user2 pass2 host3 user3 pass3 ...
-// sshj tlpalcorr01 lalannd2 pass1 tlbefgitp01 bitbuck pass2 tlbefgitp02 lalannd2 pass3
 // C:\Software\OpenSSH\ssh.exe -o StrictHostKeyChecking=no -J lalannd2@tlpalcorr01,bitbuck@tlbefgitp01 lalannd2@tlbefgitp02
 var activeX = [];
 function callActiveX(AXName, add) {
@@ -203,11 +194,18 @@ switch (arg.count()) {
         pass[0]=arg(1);
       } else {
         for(i=0; i < arg.count(); i+=3) {
-          if (i === 0) user_host+=' -J ';
-          user_host+=' ';
+          if (i === 0) {
+            user_host+=' -J ';
+          } else {
+            if (i === arg.count()-3) {
+              user_host+=' ';
+            } else user_host+=',';
+          }
 
           user_host+=arg(i)+'@'+arg(i+2);
           pass[i/3]=arg(i+1);
+
+          //WScript.echo(i+'/'+arg.count()+' : '+user_host);
         }
       }
 
