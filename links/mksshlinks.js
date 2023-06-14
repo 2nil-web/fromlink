@@ -10,19 +10,6 @@ function sha() { return callActiveX("Shell.Application"); }
 function wsn() { return callActiveX('Wscript.Network'); }
 function scc() { return callActiveX('ScriptControl'); }
 
-if (false) {
-Shell=new ActiveXObject("WScript.Shell");
-DesktopPath=Shell.SpecialFolders("Desktop");
-link=Shell.CreateShortcut(DesktopPath + "\\test.lnk");
-link.Arguments="1 2 3";
-link.Description="test shortcut";
-link.HotKey="CTRL+ALT+SHIFT+X";
-link.IconLocation="app.exe,1";
-link.TargetPath="c:\\blah\\app.exe";
-link.WindowStyle=3;
-link.WorkingDirectory="c:\\blah";
-link.Save();  
-}
 
 function curdir() {
   return fso().GetAbsolutePathName(".");
@@ -36,9 +23,7 @@ function parcurdir () {
   return fso().GetParentFolderName(curdir());
 }
 
-WScript.echo("Curr parent dir "+parcurdir());
-
-
+// From https://www.vbsedit.com/html/e6ac108b-15f6-4a54-891f-589e8b687ace.asp
 function mklnk (lpth, tgt, args, desc, hk, wdir, wsty, icn) {
   lnk=wsh().CreateShortcut(lpth);
   lnk.TargetPath=tgt;
@@ -59,8 +44,9 @@ function mklnk (lpth, tgt, args, desc, hk, wdir, wsty, icn) {
   lnk.Save();
 }
 
-mklnk("tlpalcorr01.lnk", parcurdir()+"\\fromlnk.exe", "sshj.js");
-mklnk("git.lnk", parcurdir()+"\\fromlnk.exe", "sshj.js tlpalcorr01");
-mklnk("gitasic.lnk", parcurdir()+"\\fromlnk.exe", "sshj.js tlpalcorr01");
-mklnk("git-dmz.lnk", parcurdir()+"\\fromlnk.exe", "sshj.js tlpalcorr01");
+target=parcurdir()+"\\fromlnk.exe";
+mklnk("tlpalcorr01.lnk", target, "sshj.js");
+mklnk("git.lnk",         target, "sshj.js tlpalcorr01");
+mklnk("gitasic.lnk",     target, "sshj.js tlpalcorr01");
+mklnk("git-dmz.lnk",     target, "sshj.js tlpalcorr01");
 
