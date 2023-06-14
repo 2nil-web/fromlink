@@ -143,12 +143,9 @@ SSH_CMD='C:\\Software\\OpenSSH\\ssh.exe'
 function do_ssh (user_host, pass) {
   cmd=SSH_CMD+' -o StrictHostKeyChecking=no '+user_host;
 
-  if (false) {
+  if (false) { // Trace
     msg=cmd+'\n';
-    for (i=0; i < pass.length; i++) {
-      msg+='['+pass[i]+']';
-    }
-
+    for (i=0; i < pass.length; i++) msg+='['+pass[i]+']';
     WScript.echo(msg);
   }
 
@@ -181,7 +178,7 @@ switch (arg.count()) {
     else WScript.echo("Environment variable USERNAME has no value (a).");
     break;
   case 2: // One ssh jump with current USERNAME@param1 as proxy and USERNAME@param2 as target
-    if (def_user != "") do_ssh(def_user+'@'+arg(1)+' -J '+def_user+'@'+arg(0), [ def_pass, def_pass ]);
+    if (def_user != "") do_ssh(' -J '+def_user+'@'+arg(0)+' '+def_user+'@'+arg(1), [ def_pass, def_pass ]);
     else WScript.echo("Environment variable USERNAME has no value (b).");
     break;
   default : // Parameters provided by batch of 3 in the form "user password host" to make one simple ssh if exactly 3 parameters or ssh jump if more than 3 parameters.
