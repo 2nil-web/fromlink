@@ -1,4 +1,5 @@
 *.o
+*.lnk
 *.d
 *.exe
 .qmake.stash
