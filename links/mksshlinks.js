@@ -45,8 +45,23 @@ function mklnk (lpth, tgt, args, desc, hk, wdir, wsty, icn) {
 }
 
 target=parcurdir()+"\\fromlnk.exe";
+// Sans rebond
+mklnk("capalcorp01.lnk", target, "sshj.js");
+mklnk("capalscnp01.lnk", target, "sshj.js");
 mklnk("tlpalcorr01.lnk", target, "sshj.js");
+mklnk("tlpalscnr01.lnk", target, "sshj.js");
+
+// Avec 1 rebond
 mklnk("git.lnk",         target, "sshj.js tlpalcorr01");
 mklnk("gitasic.lnk",     target, "sshj.js tlpalcorr01");
 mklnk("git-dmz.lnk",     target, "sshj.js tlpalcorr01");
+mklnk("tlbefxrad01.lnk",     target, "sshj.js tlpalcorr01");
+mklnk("tlbefjenccslp02.lnk",     target, "sshj.js tlpalcorr01");
+/*
+cagitxp02 <=> git-dmz
+casccd02
 
+jenkins-argos-tls
+jenkins-ccsl-tls <=> tlbefjenccslp02
+tlbefxrad01
+*/
