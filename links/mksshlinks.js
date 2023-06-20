@@ -23,12 +23,17 @@ function parcurdir () {
   return fso().GetParentFolderName(curdir());
 }
 
+var final_msg="Creating shortcuts:\n";
+var imsg=1;
+target=parcurdir()+"\\fromlnk.exe";
 // From https://www.vbsedit.com/html/e6ac108b-15f6-4a54-891f-589e8b687ace.asp
-function mklnk (lpth, tgt, args, desc, hk, wdir, wsty, icn) {
-  lnk=wsh().CreateShortcut(lpth);
-  lnk.TargetPath=tgt;
+function mklnk (lpth, args, desc, hk, wdir, wsty, icn) {
+  lnk=wsh().CreateShortcut(lpth+".lnk");
+  lnk.TargetPath=target;
 
-  if (typeof args !== 'undefined') lnk.Arguments=args;
+  lnk.Arguments="sshj.js";
+  if (typeof args !== 'undefined') lnk.Arguments+=" "+args;
+
   if (typeof desc !== 'undefined') lnk.Description=desc;
   if (typeof hk !== 'undefined')   lnk.HotKey=hk;
 
@@ -42,26 +47,44 @@ function mklnk (lpth, tgt, args, desc, hk, wdir, wsty, icn) {
   // By default icon is target one.
   if (typeof icn !== 'undefined') lnk.IconLocation=icn;
   lnk.Save();
+
+  final_msg+=imsg+": "+lpth+"\n";
+  imsg++;
 }
 
-target=parcurdir()+"\\fromlnk.exe";
+
 // Sans rebond
-mklnk("capalcorp01.lnk", target, "sshj.js");
-mklnk("capalscnp01.lnk", target, "sshj.js");
-mklnk("tlpalcorr01.lnk", target, "sshj.js");
-mklnk("tlpalscnr01.lnk", target, "sshj.js");
+function mkl0(nam) {
+  mklnk(nam);
+}
+mkl0("capalcorp01");
+mkl0("capalscnp01");
+mkl0("tlpalcorr01");
+mkl0("tlpalscnr01");
 
 // Avec 1 rebond
-mklnk("git.lnk",         target, "sshj.js tlpalcorr01");
-mklnk("gitasic.lnk",     target, "sshj.js tlpalcorr01");
-mklnk("git-dmz.lnk",     target, "sshj.js tlpalcorr01");
-mklnk("tlbefxrad01.lnk",     target, "sshj.js tlpalcorr01");
-mklnk("tlbefjenccslp02.lnk",     target, "sshj.js tlpalcorr01");
-/*
-cagitxp02 <=> git-dmz
-casccd02
+function mkl1(nam) {
+  mklnk(nam, "tlpalcorr01");
+}
 
-jenkins-argos-tls
-jenkins-ccsl-tls <=> tlbefjenccslp02
-tlbefxrad01
-*/
+//mkl1("cagitxp01");
+
+mkl1("cabefnfsp02");
+mkl1("casccd02");
+mkl1("git");
+mkl1("gitasic");
+mkl1("git-dmz"); /* <=> */ mkl1("cagitxp02");
+mkl1("jenkins-argos-tls");
+mkl1("jenkins-ccsl-tls"); /* <=> */ mkl1("tlbefjenccslp02");
+mkl1("tlbefarmp02a");
+mkl1("tlbefjenccslp02");
+mkl1("tlbefnfsp02");
+mkl1("tlbefxrad01");
+
+// EF
+mkl1("befad0896");
+mkl1("befad0979");
+mkl1("befad0987");
+
+
+WScript.echo(final_msg);
