@@ -160,7 +160,20 @@ var Base64={
     return str;
   }
 };
+
+function btoa(s) {
+  return Base64.encode(s);
+}
+
+function atob(s) {
+  return Base64.decode(s);
+}
 // ### End polyfills ###
+
+//'Script dirname:'+WScript.FullName.dirname()+'\n'+
+//'Script basename:'+WScript.FullName.basename().toLowerCase()+'\n'+
+//'ScriptEngineMajorVersion:'+ScriptEngineMajorVersion()+'\n'+
+//'ScriptEngineMinorVersion:'+ScriptEngineMinorVersion()+'\n'+
 
 // ### Shortcuts and others ###
 
@@ -181,6 +194,13 @@ function narg_val(k) {
   return null;
 }
 
+String.prototype.basename = function() {
+  return fso().getbasename(this);
+}
+
+String.prototype.dirname = function() {
+  return fso().GetParentFolderName(this);
+}
 
 // sleep in floating seconds
 function sleep(sec) {

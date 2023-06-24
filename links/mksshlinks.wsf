@@ -11,7 +11,7 @@ function mklnk (lpth, args, desc, hk, wdir, wsty, icn) {
   lnk.TargetPath=target;
 
   lnk.Arguments="sshj.wsf";
-  if (typeof args !== 'undefined') lnk.Arguments+=" "+wsh().ExpandEnvironmentStrings(args);
+  if (typeof args !== 'undefined') lnk.Arguments+=" "+args;
 
   if (typeof desc !== 'undefined') lnk.Description=desc;
   if (typeof hk !== 'undefined')   lnk.HotKey=hk;
@@ -67,12 +67,12 @@ mkl1("befad0979");
 mkl1("befad0987");
 
 // Avec 1 rebond et 2 users différends
-mklnk("canext04", "lalannd2 ocvdBum2! tlpalcorr01 mtrccase mtrccase");
+mklnk("canext04", "lalannd2 %LDPASS% tlpalcorr01 mtrccase mtrccase");
 
 // Avec 1 rebond EF linux
-mklnk("befad0896", "lalannd2 ocvdBum2! tlpalcorr01 lalannd2 ocvdBum12$*2");
-//mklnk("befad0979", "lalannd2 ocvdBum2! tlpalcorr01 lalannd2 ocvdBum12$*2");
-mklnk("befad0987", "lalannd2 ocvdBum2! tlpalcorr01 lalannd2 ocvdBum12$*2");
+mklnk("befad0896", "lalannd2 %LDPASS% tlpalcorr01 lalannd2 %ADPASS%");
+//mklnk("befad0979", "lalannd2 %LDPASS% tlpalcorr01 lalannd2 %ADPASS%");
+mklnk("befad0987", "lalannd2 %LDPASS% tlpalcorr01 lalannd2 %ADPASS%");
 WScript.echo(final_msg);
    </script>   
 </job>

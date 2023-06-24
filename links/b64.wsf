@@ -3,7 +3,7 @@
   <script language="JScript" src="common.js"/>
   <script language="JScript">
   function usage () {
-    WScript.echo("Base 64 encoding or decoding whether a named argument \"decode\" or \"encode\" is provided.\nIf there is only unnamed argument the first one is encoded.");
+    WScript.echo('Base 64 encoding or decoding whether a named argument "decode" or "encode" is provided.\nIf there is only unnamed argument the first one is encoded.\n');
   }
 
   if (has_narg("help")) {
@@ -16,7 +16,7 @@
     val=narg_val("decode");
 
     if (val !== null) {
-      WScript.echo(Base64.decode(val));
+      WScript.echo(atob(val));
       WScript.quit();
     }
   }
@@ -30,7 +30,7 @@
   }
 
   if (val !== null) {
-    WScript.echo(Base64.encode(val));
+    WScript.echo(btoa(val));
     WScript.quit();
   }
 

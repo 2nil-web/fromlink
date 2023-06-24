@@ -54,19 +54,19 @@ function usage_and_die () {
 }
 
 def_user=getenv("USERNAME");
-def_pass=getenv("SSHPASS");
-if (def_pass==="") def_pass=Base64.decode("b2N2ZEJ1bTIh");
+def_apass=Base64.decode(getenv("ADPASS"));
+def_lpass=Base64.decode(getenv("LDPASS"));
 
 switch (argv.length) {
   case 0: // Error no param
     usage_and_die();
     break;
   case 1: // Simple ssh with current USERNAME and default password to host param1
-    if (def_user !="") do_ssh(def_user+'@'+argv[0], [ def_pass ]);
+    if (def_user!=="" && def_lpass!=="") do_ssh(def_user+'@'+argv[0], [ def_lpass ]);
     else WScript.echo("Environment variable USERNAME has no value (a).");
     break;
   case 2: // One ssh jump with current USERNAME@param1 as proxy and USERNAME@param2 as target
-    if (def_user !="") do_ssh(' -J '+def_user+'@'+argv[0]+' '+def_user+'@'+argv[1], [ def_pass, def_pass ]);
+    if (def_user!=="" && def_lpass!=="") do_ssh(' -J '+def_user+'@'+argv[0]+' '+def_user+'@'+argv[1], [ def_lpass, def_lpass ]);
     else WScript.echo("Environment variable USERNAME has no value (b).");
     break;
   default : // Parameters provided by batch of 3 in the form "user password host" to make one simple ssh if exactly 3 parameters or ssh jump if more than 3 parameters.
@@ -76,7 +76,7 @@ switch (argv.length) {
 
       if (argv.length===3) {
         user_host+=argv[0]+'@'+argv[2];
-        pass[0]=argv[1];
+        pass[0]=Base64.decode(getenv(argv[1]));
       } else {
         for(i=0; i < argv.length; i+=3) {
           if (i===0) {
@@ -88,7 +88,7 @@ switch (argv.length) {
           }
 
           user_host+=argv[i]+'@'+argv[i+2];
-          pass[i/3]=argv[i+1];
+          pass[i/3]=Base64.decode(getenv(argv[i+1]));
 
           //WScript.echo(i+'/'+argv.length+' : '+user_host);
         }
