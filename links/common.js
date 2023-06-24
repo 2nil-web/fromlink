@@ -1,6 +1,7 @@
 
+// Win32 and COM api
 var activeX=[];
-function callActiveX(AXName, add) {
+function callActiveX(AXName) {
   if (typeof activeX[AXName]==='undefined') activeX[AXName]=new ActiveXObject(AXName);
   return activeX[AXName];
 }
@@ -10,18 +11,6 @@ function wsh() { return callActiveX("WScript.Shell"); }
 function sha() { return callActiveX("Shell.Application"); }
 function wsn() { return callActiveX('Wscript.Network'); }
 function scc() { return callActiveX('ScriptControl'); }
-
-// ### Polyfills ###
-// trim
-if (!String.prototype.trim) {
-  (function() {
-    // Make sure we trim BOM and NBSP
-    var rtrim=/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
-    String.prototype.trim=function() {
-      return this.replace(rtrim, '');
-    };
-  })();
-}
 
 var MB={
   Ok:0, OkCancel:1, AbortRetryIgnore:2, YesNoCancel:3, YesNo:4,
@@ -35,6 +24,18 @@ var ID={
   Ok:1, Cancel:2, Abort:3, Retry:4, Ignore:5, Yes:6, No:7,
   TryAgain:10, Continue:11, TimeOut:-1
 };
+
+// ### Polyfills ###
+// trim
+if (!String.prototype.trim) {
+  (function() {
+    // Make sure we trim BOM and NBSP
+    var rtrim=/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
+    String.prototype.trim=function() {
+      return this.replace(rtrim, '');
+    };
+  })();
+}
 
 function alert(s) {
   wsh().Popup(s, 0, WScript.ScriptName, MB.Ok + MB.Information);
@@ -160,9 +161,25 @@ var Base64={
   }
 };
 
-// Fonction raccourcie vers les arguments
-function arg(n) { return WScript.arguments(n); }
-function arg.count() { return WScript.arguments.count(); }
+
+// Convert vbscript Argument to javascript array
+var argv=[];
+for (i=0; i < WScript.Arguments.Unnamed.Count; i++) argv.push(WScript.Arguments.Unnamed(i));
+// Return the value of a named arguments (see https://ss64.com/vb/syntax-args.html).
+function has_narg(k) {
+  return WScript.Arguments.Named.Exists(k);
+}
+
+function narg_val(k) {
+  if (has_narg(k) && typeof WScript.Arguments.Named.Item(k)!=='undefined') {
+    re='/'+k+'/i';
+    return WScript.Arguments.Named.Item(k).replace('/'+k+'/i', "$1")
+  }
+
+  return null;
+}
+
+
 function sleep(sec) {
   ms=sec*1000;
   WScript.Sleep(ms);
@@ -202,103 +219,5 @@ function SCmd(cmd) {
 
   return text;
   //return text.split("\n");
-}
-
-// ssh command
-// V7
-//SSH_CMD='ssh.exe'
-// V8
-SSH_CMD ='C:\\Software\\OpenSSH\\ssh.exe'
-SSH_CMD+=' -o StrictHostKeyChecking=no ';
-
-function ssh_trc(cmd, pass) {
-  if (false) { // Trace
-    msg=cmd+'\n';
-    for (i=0; i < pass.length; i++) msg+='['+pass[i]+']';
-    WScript.echo(msg);
-  }
-}
-
-// Option -J in ssh V7 does NOT work correctly so we use -o ProxyCommand.
-function do_sshV7(user_host, pass) {
-}
-
-
-
-// Option -J in ssh V8 does WORK correctly.
-function do_sshV8(user_host, pass) {
-  cmd=SSH_CMD+user_host;
-
-  ssh_trc(cmd, pass);
-
-  if (true) {
-    wsh().Run(cmd, 1, false);
-//    sleep(1);
-
-    for (i=0; i < pass.length; i++) {
-      sleep(0.8);
-      wsh().SendKeys(pass[i]+"{ENTER}");
-    }
-  }
-}
-
-function do_ssh(user_host, pass) {
-    sshMajorVersion=SCmd(SSH_CMD+' -V').trim().replace(/OpenSSH.*_(.*), .*/, "$1").replace(/\..*/, "");
-    if (sshMajorVersion > 7) do_sshV8(user_host, pass);
-    else do_sshV7(user_host, pass);
-  
-}
-
-function usage_and_die () {
-  WScript.echo("Missing parameters.\nThere must be at least one, two or groups of three parameters.\n 1) If only one is provides it defines the host to drectly reach with USERNAME as login and SSHPASS as password (or default).\n 2) If two provided they define the proxy host and the target host to reach with USERNAME as login and SSHPASS as password for both hosts.\n 3) user, password and host.\nIf there is only one group then we run a direct ssh as user@host.\nOtherwise we do as many jumps as necessary to reach the last host.\nExamples:\nsshj.js user pass host\n==> will run a direct ssh as user@host.\nsshj.js user1 pass1 host1 user2 pass2 host2\n==> will run a ssh jump through host1 to reach host2.\nsshj.js host1 user1 pass1 host2 user2 pass2 host3 user3 pass3\n==> will run a ssh jump through host1, host2 to reach host3.\nAnd so on ...\n\nThen the passwords input is simulated as much time as necessary.");
-  WScript.quit();
-}
-
-def_user=getenv("USERNAME");
-def_pass=getenv("SSHPASS");
-if (def_pass==="") def_pass=Base64.decode("b2N2ZEJ1bTIh");
-
-switch (arg.count()) {
-  case 0: // Error no param
-    usage_and_die();
-    break;
-  case 1: // Simple ssh with current USERNAME and default password to host param1
-    if (def_user !="") do_ssh(def_user+'@'+arg(0), [ def_pass ]);
-    else WScript.echo("Environment variable USERNAME has no value (a).");
-    break;
-  case 2: // One ssh jump with current USERNAME@param1 as proxy and USERNAME@param2 as target
-    if (def_user !="") do_ssh(' -J '+def_user+'@'+arg(0)+' '+def_user+'@'+arg(1), [ def_pass, def_pass ]);
-    else WScript.echo("Environment variable USERNAME has no value (b).");
-    break;
-  default : // Parameters provided by batch of 3 in the form "user password host" to make one simple ssh if exactly 3 parameters or ssh jump if more than 3 parameters.
-    if (arg.count()%3==0) {
-      user_host='';
-      var pass=[];
-
-      if (arg.count()===3) {
-        user_host+=arg(0)+'@'+arg(2);
-        pass[0]=arg(1);
-      } else {
-        for(i=0; i < arg.count(); i+=3) {
-          if (i===0) {
-            user_host+=' -J ';
-          } else {
-            if (i===arg.count()-3) {
-              user_host+=' ';
-            } else user_host+=',';
-          }
-
-          user_host+=arg(i)+'@'+arg(i+2);
-          pass[i/3]=arg(i+1);
-
-          //WScript.echo(i+'/'+arg.count()+' : '+user_host);
-        }
-      }
-
-      do_ssh(user_host, pass);
-    } else {
-      usage_and_die();
-    }
-    break;
 }
 

@@ -1,0 +1,4 @@
+<job id="sshj">
+   <script language="JavaScript" src="common.js"/>
+   <script language="JavaScript" src="old_sshj.js"/>
+</job>

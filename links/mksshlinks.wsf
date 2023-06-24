@@ -1,28 +1,7 @@
-var activeX=[];
-function callActiveX(AXName, add) {
-  if (typeof activeX[AXName] === 'undefined') activeX[AXName]=new ActiveXObject(AXName);
-  return activeX[AXName];
-}
-
-function fso() { return callActiveX("Scripting.FileSystemObject"); }
-function wsh() { return callActiveX("WScript.Shell"); }
-function sha() { return callActiveX("Shell.Application"); }
-function wsn() { return callActiveX('Wscript.Network'); }
-function scc() { return callActiveX('ScriptControl'); }
-
-
-function curdir() {
-  return fso().GetAbsolutePathName(".");
-}
-
-function pardir (fold) {
-  return fso().GetParentFolderName(fold);
-}
-
-function parcurdir () {
-  return fso().GetParentFolderName(curdir());
-}
-
+<?xml version="1.0" ?>
+<job id="mksshlink">
+   <script language="JScript" src="common.js"/>
+   <script language="JScript">
 var final_msg="Creating shortcuts:\n";
 var imsg=1;
 target=parcurdir()+"\\fromlnk.exe";
@@ -31,8 +10,8 @@ function mklnk (lpth, args, desc, hk, wdir, wsty, icn) {
   lnk=wsh().CreateShortcut(lpth+".lnk");
   lnk.TargetPath=target;
 
-  lnk.Arguments="sshj.js";
-  if (typeof args !== 'undefined') lnk.Arguments+=" "+args;
+  lnk.Arguments="sshj.wsf";
+  if (typeof args !== 'undefined') lnk.Arguments+=" "+wsh().ExpandEnvironmentStrings(args);
 
   if (typeof desc !== 'undefined') lnk.Description=desc;
   if (typeof hk !== 'undefined')   lnk.HotKey=hk;
@@ -69,6 +48,7 @@ function mkl1(nam) {
 
 //mkl1("cagitxp01");
 
+mkl1("cabefgitr01");
 mkl1("cabefnfsp02");
 mkl1("casccd02");
 mkl1("git");
@@ -86,5 +66,14 @@ mkl1("befad0896");
 mkl1("befad0979");
 mkl1("befad0987");
 
+// Avec 1 rebond et 2 users différends
+mklnk("canext04", "lalannd2 ocvdBum2! tlpalcorr01 mtrccase mtrccase");
 
+// Avec 1 rebond EF linux
+mklnk("befad0896", "lalannd2 ocvdBum2! tlpalcorr01 lalannd2 ocvdBum12$*2");
+//mklnk("befad0979", "lalannd2 ocvdBum2! tlpalcorr01 lalannd2 ocvdBum12$*2");
+mklnk("befad0987", "lalannd2 ocvdBum2! tlpalcorr01 lalannd2 ocvdBum12$*2");
 WScript.echo(final_msg);
+   </script>   
+</job>
+

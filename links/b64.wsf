@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<job id="b64">
+  <script language="JScript" src="common.js"/>
+  <script language="JScript">
+  function usage () {
+    WScript.echo("Base 64 encoding or decoding whether a named argument \"decode\" or \"encode\" is provided.\nIf there is only unnamed argument the first one is encoded.");
+  }
+
+  if (has_narg("help")) {
+    usage();
+    WScript.quit();
+  }
+
+  var val=null;
+  if (has_narg("decode")) {
+    val=narg_val("decode");
+
+    if (val !== null) {
+      WScript.echo(Base64.decode(val));
+      WScript.quit();
+    }
+  }
+
+  if (has_narg("encode")) {
+    val=narg_val("encode");
+  }
+
+  if (val === null) {
+    if (argv.length > 0) val=argv[0];
+  }
+
+  if (val !== null) {
+    WScript.echo(Base64.encode(val));
+    WScript.quit();
+  }
+
+  usage();
+   </script>
+</job>
+
