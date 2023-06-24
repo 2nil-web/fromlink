@@ -1,5 +1,5 @@
 
-// Win32 and COM api
+// ### Win32 and COM API ###
 var activeX=[];
 function callActiveX(AXName) {
   if (typeof activeX[AXName]==='undefined') activeX[AXName]=new ActiveXObject(AXName);
@@ -24,6 +24,7 @@ var ID={
   Ok:1, Cancel:2, Abort:3, Retry:4, Ignore:5, Yes:6, No:7,
   TryAgain:10, Continue:11, TimeOut:-1
 };
+// ### End Win32 and COM API ###
 
 // ### Polyfills ###
 // trim
@@ -45,7 +46,6 @@ function confirm(s) {
   rep=wsh().Popup(s, 0, WScript.ScriptName, MB.OkCancel + MB.Question);
   return (rep==ID.Ok);
 }
-// ### End polyfills ###
 
 // Base64 encoding and decoding
 var Base64={
@@ -160,7 +160,9 @@ var Base64={
     return str;
   }
 };
+// ### End polyfills ###
 
+// ### Shortcuts and others ###
 
 // Convert vbscript Argument to javascript array
 var argv=[];
@@ -180,12 +182,13 @@ function narg_val(k) {
 }
 
 
+// sleep in floating seconds
 function sleep(sec) {
   ms=sec*1000;
   WScript.Sleep(ms);
 }
 
-// Return empty string if env var does not exists or has empty value
+// Return empty string if env var does not exists [ or has empty value ]
 function getenv (name) {
   varname="%"+name+"%";
   varval=wsh().ExpandEnvironmentStrings(varname);
@@ -220,4 +223,18 @@ function SCmd(cmd) {
   return text;
   //return text.split("\n");
 }
+
+
+function curdir() {
+  return fso().GetAbsolutePathName(".");
+}
+
+function pardir (fold) {
+  return fso().GetParentFolderName(fold);
+}
+
+function parcurdir () {
+  return pardir(curdir());
+}
+
 

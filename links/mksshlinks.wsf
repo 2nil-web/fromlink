@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
 <job id="mksshlink">
-   <script language="JScript" src="common.js"/>
-   <script language="JScript">
+   <script language="javascript" src="common.js"/>
+   <script language="javascript">
 var final_msg="Creating shortcuts:\n";
 var imsg=1;
-target=parcurdir()+"\\fromlnk.exe";
+var target=parcurdir()+"\\fromlnk.exe";
 // From https://www.vbsedit.com/html/e6ac108b-15f6-4a54-891f-589e8b687ace.asp
 function mklnk (lpth, args, desc, hk, wdir, wsty, icn) {
   lnk=wsh().CreateShortcut(lpth+".lnk");
@@ -53,9 +53,9 @@ mkl1("cabefnfsp02");
 mkl1("casccd02");
 mkl1("git");
 mkl1("gitasic");
-mkl1("git-dmz"); /* <=> */ mkl1("cagitxp02");
+mkl1("git-dmz"); /* */ mkl1("cagitxp02");
 mkl1("jenkins-argos-tls");
-mkl1("jenkins-ccsl-tls"); /* <=> */ mkl1("tlbefjenccslp02");
+mkl1("jenkins-ccsl-tls"); /* */ mkl1("tlbefjenccslp02");
 mkl1("tlbefarmp02a");
 mkl1("tlbefjenccslp02");
 mkl1("tlbefnfsp02");
