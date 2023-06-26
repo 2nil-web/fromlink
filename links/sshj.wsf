@@ -2,6 +2,8 @@
   <script language="javascript" src="common.js"/>
   <script language="javascript">
 
+// ===> To add a much longer sleeping time out when no connection on corresponding server for today.
+
 // ssh command
 // With ssh V7, option -J in ssh before V8 does NOT WORK correctly, so we use it.
 SSH_CMD='ssh.exe'
