@@ -67,7 +67,8 @@ mkl1("befad0979");
 mkl1("befad0987");
 
 // Avec 1 rebond et 2 users différends
-mklnk("canext04", "lalannd2 %LDPASS% tlpalcorr01 mtrccase mtrccase");
+
+mklnk("canext04", "/sleep:2 lalannd2 %LDPASS% tlpalcorr01 mtrccase bXRyY2Nhc2U=");
 
 // Avec 1 rebond EF linux
 mklnk("befad0896", "lalannd2 %LDPASS% tlpalcorr01 lalannd2 %ADPASS%");
