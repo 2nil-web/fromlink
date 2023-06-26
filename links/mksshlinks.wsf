@@ -10,7 +10,7 @@ function mklnk (lpth, args, desc, hk, wdir, wsty, icn) {
   lnk=wsh().CreateShortcut(lpth+".lnk");
   lnk.TargetPath=target;
 
-  lnk.Arguments="sshj.wsf";
+  lnk.Arguments="sshj.wsf /term:pterm";
   if (typeof args !== 'undefined') lnk.Arguments+=" "+args;
 
   if (typeof desc !== 'undefined') lnk.Description=desc;

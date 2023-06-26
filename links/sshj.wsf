@@ -9,30 +9,35 @@ SSH_CMD ='C:\\Software\\OpenSSH\\ssh.exe'
 SSH_CMD+=' -o StrictHostKeyChecking=no ';
 
 function ssh_trc(cmd, pass) {
-  if (false) { // Trace
+  if (true) { // Trace
     msg=cmd+'\n';
     for (i=0; i < pass.length; i++) msg+='['+pass[i]+']';
-    WScript.echo(msg);
+    if (!confirm(msg)) return false;
   }
+
+  return true;
 }
 
 // Option -J in ssh V7 does NOT work correctly so we use -o ProxyCommand.
-function do_sshV7(user_host, pass) {
+function do_sshV7(cmd, pass) {
 }
 
+// There are 3 available types of terminal emulators :
+// 1) raw is the default windows cmd console it is quite a bad terminal emulator but it exists by default on all windows systems.
+// 2) pterm or putty use putty terminal emulator, it is a better terminal emulator but as to be installed (whether in admin or user mode).
+// 3) mintty is a fork of putty adapted for cygwin and msys but with some issue corrections and enhanced functionnalities (graphics ...)
+term_type=narg_val("term");
+if (term_type === null) term_type='raw';
 
 sleep_val=narg_val("sleep");
 if (sleep_val === null) sleep_val=0.8;
 
 // Option -J in ssh V8 does WORK correctly.
-function do_sshV8(user_host, pass) {
-  cmd=SSH_CMD+user_host;
-
-  ssh_trc(cmd, pass);
-
-  if (true) {
+function do_sshV8(cmd, pass) {
+  if (true && ssh_trc(cmd, pass)) {
     wsh().Run(cmd, 1, false);
-//    sleep(1);
+    // mintty may be slower to start because of the cygwin.dll load time
+    if (term_type==='mintty') sleep(2);
 
     for (i=0; i < pass.length; i++) {
       sleep(sleep_val);
@@ -41,11 +46,35 @@ function do_sshV8(user_host, pass) {
   }
 }
 
+// pterm is the putty terminal emulator ery lightweight
+// See https://www.chiark.greenend.org.uk/~sgtatham/putty
+PTERM_CMD='C:\\Users\\lalannd2\\MyApps\\Putty\\pterm.exe';
+// mintty is the cygwin/mingw/msys terminal emulator, its big advantage is to embed graphics in terminal output (sixel, tektronix ..), see https://mintty.github.io/mintty.1.html
+// try : GNUTERM=sixel /mingw64/bin/gnuplot -e "splot [x=-3:3] [y=-3:3] sin(x) * cos(y)"
+//MINTTY_CMD='C:\\Software\\wsltty\\bin\\mintty.exe bash -c ';
+MINTTY_CMD='C:\\Software\\UnixTools\\msys64\\usr\\bin\\mintty.exe';
+
 function do_ssh(user_host, pass) {
-    sshMajorVersion=SCmd(SSH_CMD+' -V').trim().replace(/OpenSSH.*_(.*), .*/, "$1").replace(/\..*/, "");
-    if (sshMajorVersion > 7) do_sshV8(user_host, pass);
-    else do_sshV7(user_host, pass);
-  
+  sshMajorVersion=SCmd(SSH_CMD+' -V').trim().replace(/OpenSSH.*_(.*), .*/, "$1").replace(/\..*/, "");
+
+  var ssh_cmd;
+  switch (term_type) {
+    case 'pterm':
+    case 'putty':
+      ssh_cmd=PTERM_CMD+' -e '+SSH_CMD;
+      break;
+    case 'mintty':
+      if (MINTTY_CMD!=="") ssh_cmd=MINTTY_CMD+' '+SSH_CMD;
+      break;
+    default:
+      ssh_cmd=SSH_CMD;
+      break;
+  }
+
+  cmd=ssh_cmd+' '+user_host;
+  if (sshMajorVersion > 7) do_sshV8(cmd, pass);
+  else do_sshV7(cmd, pass);
+
 }
 
 function usage_and_die () {
@@ -76,7 +105,7 @@ switch (argv.length) {
 
       if (argv.length===3) {
         user_host+=argv[0]+'@'+argv[2];
-        pass[0]=Base64.decode(getenv(argv[1]));
+        pass[0]=Base64.decode(wsh().ExpandEnvironmentStrings(argv[1]));
       } else {
         for(i=0; i < argv.length; i+=3) {
           if (i===0) {
@@ -88,7 +117,7 @@ switch (argv.length) {
           }
 
           user_host+=argv[i]+'@'+argv[i+2];
-          pass[i/3]=Base64.decode(getenv(argv[i+1]));
+          pass[i/3]=Base64.decode(wsh().ExpandEnvironmentStrings(argv[i+1]));
 
           //WScript.echo(i+'/'+argv.length+' : '+user_host);
         }
