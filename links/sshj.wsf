@@ -9,7 +9,7 @@ SSH_CMD ='C:\\Software\\OpenSSH\\ssh.exe'
 SSH_CMD+=' -o StrictHostKeyChecking=no ';
 
 function ssh_trc(cmd, pass) {
-  if (true) { // Trace
+  if (false) { // Trace
     msg=cmd+'\n';
     for (i=0; i < pass.length; i++) msg+='['+pass[i]+']';
     if (!confirm(msg)) return false;
