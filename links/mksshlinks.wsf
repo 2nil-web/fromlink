@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <job id="mksshlink">
-   <script language="javascript" src="common.js"/>
+   <script language="javascript" src="libcommon.js"/>
    <script language="javascript">
 var final_msg="Creating shortcuts:\n";
 var imsg=1;

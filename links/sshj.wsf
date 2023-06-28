@@ -1,5 +1,5 @@
 <job id="sshj">
-  <script language="javascript" src="common.js"/>
+  <script language="javascript" src="libcommon.js"/>
   <script language="javascript">
 
 // ===> To add a much longer sleeping time out when no connection on corresponding server for today.
@@ -77,43 +77,6 @@ function do_ssh(user_host, pass) {
   return true;
 }
 
-// Option -J in ssh before V8 does NOT WORK correctly.
-function sshV7_prep (pass) {
-  var user_host='';
-
-  for(i=0; i < argv.length; i+=3) {
-    if (i===argv.length-3) user_host+=' ';
-    else user_host+=' -o ProxyCommand="'+SSH_CMD+' -W %h:%p ';
-
-    user_host+=argv[i]+'@'+argv[i+2];
-    if (i !==argv.length-3) user_host+='"';
-    pass[i/3]=Base64.decode(wsh().ExpandEnvironmentStrings(argv[i+1]));
-  }
-
-  return user_host;
-}
-
-// Option -J in ssh V8 does WORK correctly.
-function sshV8_prep (pass) {
-  var user_host='';
-
-  for(i=0; i < argv.length; i+=3) {
-    if (i===0) {
-      user_host+=' -J ';
-    } else {
-      if (i===argv.length-3) {
-        user_host+=' ';
-      } else user_host+=',';
-    }
-
-    user_host+=argv[i]+'@'+argv[i+2];
-    pass[i/3]=Base64.decode(wsh().ExpandEnvironmentStrings(argv[i+1]));
-  }
-
-  return user_host;
-}
-
-
 function usage_and_die () {
   WScript.echo("Missing parameters.\nThere must be at least one, two or groups of three parameters.\n 1) If only one is provides it defines the host to drectly reach with USERNAME as login and SSHPASS as password (or default).\n 2) If two provided they define the proxy host and the target host to reach with USERNAME as login and SSHPASS as password for both hosts.\n 3) user, password and host.\nIf there is only one group then we run a direct ssh as user@host.\nOtherwise we do as many jumps as necessary to reach the last host.\nExamples:\nsshj.js user pass host\n==> will run a direct ssh as user@host.\nsshj.js user1 pass1 host1 user2 pass2 host2\n==> will run a ssh jump through host1 to reach host2.\nsshj.js host1 user1 pass1 host2 user2 pass2 host3 user3 pass3\n==> will run a ssh jump through host1, host2 to reach host3.\nAnd so on ...\nThen the passwords input is simulated as much time as necessary.\n\nYou may also had various named parameters:\n  1) 'term' with values pterm, putty, mintty or raw to change the terminal emulator (by default cmd console).\n  2) 'sleep' with floating point sleeping value in seconds to change time between password auto-send (by default 0.8 sec).\n  3) 'trace' to display traces.\n  4) 'hostk' to strictly check host key (does not check by default).");
   WScript.quit();
@@ -129,8 +92,8 @@ function disp_args () {
 }
 
 def_user=getenv("USERNAME");
-//def_apass=Base64.decode(getenv("ADPASS"));
-def_lpass=Base64.decode(getenv("LDPASS"));
+//def_apass=atob_if(getenv("ADPASS"));
+def_lpass=atob_if(getenv("LDPASS"));
 
 switch (argv.length) {
   // Error no param
@@ -185,7 +148,7 @@ switch (argv.length) {
 
           user_host+=argv[i]+'@'+argv[i+2];
           if (i !==argv.length-3) user_host+='"';
-          pass[i/3]=Base64.decode(wsh().ExpandEnvironmentStrings(argv[i+1]));
+          pass[i/3]=atob_if(wsh().ExpandEnvironmentStrings(argv[i+1]));
         }
       }
 

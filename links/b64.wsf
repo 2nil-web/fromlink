@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <job id="b64">
-  <script language="JScript" src="common.js"/>
+  <script language="JScript" src="libcommon.js"/>
   <script language="JScript">
   function usage () {
     WScript.echo('Base 64 encoding or decoding whether a named argument "decode" or "encode" is provided.\nIf there is only unnamed argument the first one is encoded.\n');

@@ -158,6 +158,10 @@ var Base64={
     }
 
     return str;
+  },
+
+  is : function (s) {
+    return /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/.test(s);
   }
 };
 
@@ -168,6 +172,16 @@ function btoa(s) {
 function atob(s) {
   return Base64.decode(s);
 }
+
+function isb64(s) {
+  return Base64.is(s);
+}
+
+function atob_if(s) {
+  if (isb64(s)) return atob(s);
+  return s;
+}
+
 // ### End polyfills ###
 
 //'Script dirname:'+WScript.FullName.dirname()+'\n'+
@@ -193,6 +207,16 @@ function narg_val(k) {
 
   return null;
 }
+
+function disp_args () {
+  marg='';
+  for(i=0; i< argv.length; i++) {
+    marg+=argv[i]+', ';
+  }
+
+  alert(marg);
+}
+
 
 String.prototype.basename = function() {
   return fso().getbasename(this);
