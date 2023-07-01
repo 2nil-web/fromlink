@@ -31,7 +31,12 @@ PTERM_CMD='C:\\Users\\lalannd2\\MyApps\\Putty\\pterm.exe';
 // mintty is the cygwin/mingw/msys terminal emulator, its big advantage is to embed graphics in terminal output (sixel, tektronix ..), see https://mintty.github.io/mintty.1.html
 // try : GNUTERM=sixel /mingw64/bin/gnuplot -e "splot [x=-3:3] [y=-3:3] sin(x) * cos(y)"
 //MINTTY_CMD='C:\\Software\\wsltty\\bin\\mintty.exe bash -c ';
-MINTTY_CMD='C:\\Software\\UnixTools\\msys64\\usr\\bin\\mintty.exe';
+
+// PC Denis
+MINTTY_CMD='D:\\UnixTools\\msys64\\usr\\bin\\mintty.exe';
+
+// PC TAS
+//MINTTY_CMD='C:\\Software\\UnixTools\\msys64\\usr\\bin\\mintty.exe';
 
 
 var sshMajorVersion=SCmd(SSH_CMD+' -V').trim().replace(/OpenSSH.*_(.*), .*/, "$1").replace(/\..*/, "");
@@ -147,7 +152,7 @@ switch (argv.length) {
           }
 
           user_host+=argv[i]+'@'+argv[i+2];
-          if (i !==argv.length-3) user_host+='"';
+          if (i !==argv.length-3 && sshMajorVersion <= 7) user_host+='"';
           pass[i/3]=atob_if(wsh().ExpandEnvironmentStrings(argv[i+1]));
         }
       }

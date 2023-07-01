@@ -10,7 +10,7 @@ function mklnk (lpth, args, desc, hk, wdir, wsty, icn) {
   lnk=wsh().CreateShortcut(lpth+".lnk");
   lnk.TargetPath=target;
 
-  lnk.Arguments="sshj.wsf /term:pterm";
+  lnk.Arguments="sshj.wsf /term:mintty";
   if (typeof args !== 'undefined') lnk.Arguments+=" "+args;
 
   if (typeof desc !== 'undefined') lnk.Description=desc;
@@ -74,6 +74,7 @@ mklnk("canext04", "/sleep:2 lalannd2 %LDPASS% tlpalcorr01 mtrccase bXRyY2Nhc2U="
 mklnk("befad0896", "lalannd2 %LDPASS% tlpalcorr01 lalannd2 %ADPASS%");
 //mklnk("befad0979", "lalannd2 %LDPASS% tlpalcorr01 lalannd2 %ADPASS%");
 mklnk("befad0987", "lalannd2 %LDPASS% tlpalcorr01 lalannd2 %ADPASS%");
+mklnk("raspberrypi3", " /trace utv1 dXR2MQ== home.dplalanne.fr upi1 dXBpMQ==");
 WScript.echo(final_msg);
    </script>   
 </job>
