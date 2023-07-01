@@ -1,21 +1,27 @@
-# PuTTY and KeePass for ssh proxy access
+# Integrating PuTTY to KeePass
 
-## Requirements :
+## For ssh proxy access
 
-For our example we suppose that keepass and putty are installed as follow :
+### Requirements :
 
-### KeePass
+For our example we suppose that keepass and putty are installed in a portable way as follow :
+
+#### KeePass
 
 Download a recent portable keepass version package, knowing that what has been tested for this documentation rely on the [KeePass version 2.54](https://sourceforge.net/projects/keepass/files/KeePass%202.x/2.54/KeePass-2.54.zip/download). 
 
 Unzip the downloaded package content to "C:\Software\keepass".
 
-### PuTTY
+#### PuTTY
 
 Download the latest version of a [portable putty](https://the.earth.li/~sgtatham/putty/latest/w64/putty.zip) 
 Unzip the downloaded package content to "C:\Software\putty".
 
-## Using PuTTY for ssh proxy access
+##### N.B.
+
+Of course you are free to install these tools as you want but in this case you may have to modify some of the indications provided in this document (not that much in fact, I think). 
+
+### Using PuTTY for ssh proxy access
 
 *This can also be done in the PuTTY Configuration dialog by selecting "Connections>>Proxy" but it is not explained here as this is not our targeted use. See the PuTTY help*
 
@@ -47,9 +53,9 @@ putty.exe -proxycmd "plink.exe palamida@tlpalcorr01 -pw PALAMIDA_PASS -P 22 -nc 
 
 > *I let you find how to replace PALAMIDA_PASS and BITBUCK_PASS.*
 
-## Integrating PuTTY for ssh proxy access to KeePass
+### Integrating PuTTY for ssh proxy access to KeePass
 
-### Adding a URL scheme
+#### Adding a URL scheme
 
 We can consider that we are creating a new URL scheme that is not a straitforward ssh URL scheme but more like a ssh proxy jump one. So lets call it "sshj" as what we aim to do is equivalent to the "-J" option of the open ssh client command.
 
@@ -71,15 +77,59 @@ putty.exe -proxycmd "plink.exe palamida@tlpalcorr01 -pw PALAMIDA_PASS -P 22 -nc 
 
 *In this example I suppose that putty and plink command are in the PATH. But you also could consider to add the full path as indicated previously*
 
-#### N.B.
+##### N.B.
 
 The URL scheme that is now created remain in the user configuration space of the KeePass. It is not saved in any KeePass database. This allow you to implement it in any form you want, as it will be invoked through the "sshj" protocol tag.
 
-### Using the URL scheme
+#### Using the URL scheme
 
 Once the URL scheme is created you must indicate which KeePass entry needs to use it. To do so, open your KeePass database then on each ssh entry that needs this proxy jump, modify the URL field to have it prefixed by "ssh://"
 
 *For example if for the BitBucket bridge entry you have something like this "tlbefgitp01" then it should became something like that "ssh://tlbefgitp01"*
+
+## For ssh with password
+
+Add and use a URL scheme named "sshp" with the following URL override:
+
+```batch
+cmd://putty.exe -ssh {USERNAME}@{BASE:RMVSCM} -pw {PASSWORD}
+```
+
+## For ssh with private key
+
+You must have a private identity key file and it must be in .ppk format.
+
+As explaining how to create private identity key is not the goal of this document, see "man ssh-keygen", "man ssh-copy-id" and the PuTTY help chapter about PuTTYGen "8.2 Using PuTTYgen, the PuTTY key generator".
+
+At your choice, you may have a specific identity key file for each entry or a generic identity key file for all entries.
+
+And even use the two solutions depending on your ssh entry
+
+### Specific key for each entry
+
+In this case you must add a variable pointing the ssk key file in each entry.
+
+When editing the entry, select the advanced tab and add a string field with the name SSH_KEY_FILE and a value providing the full path of the .ppk format file, under Windows this could typically be something like : "%USERPROFILE%/.ssh/id_rsa.ppk"
+
+Add and use a URL scheme named "sshi" with the following URL override:
+
+```batch
+cmd://putty.exe -ssh {USERNAME}@{BASE:RMVSCM} -i {S:SSH_KEY} 
+```
+
+### Generic key for each entry
+
+In this case there is no need to provide a variable for each entry/
+
+Add and use a URL scheme named "sshig" with the URL override to a value like:
+
+```batch
+cmd://putty.exe -ssh {USERNAME}@{BASE:RMVSCM} -i %USERPROFILE%/.ssh/id_rsa.ppk
+```
+
+You must own an ssh key file that allow access for all the entries that will use it
+
+*ssh-copy-id is you friend ...*
 
 ## Conclusion
 
@@ -89,6 +139,6 @@ Starting from now each time you will select an ssh entry with URL field prepende
 
 #### Improvements
 
-- Add variales to store the proxy server and credential (user and password).
+- Add variables to store the proxy server and credential (user and password).
 
 - Integrate mobaxterm to keepass to do the same, if possible ...
